@@ -4,6 +4,7 @@ import sys
 import random
 from colorama import Back, Style
 
+
 # Funções utils
 def gerarCordenadas(n=5):
     cordenadas = []
@@ -12,21 +13,24 @@ def gerarCordenadas(n=5):
             cordenadas.append(linha * 10 + coluna)
     return cordenadas
 
+
 cores = {
     'azul': Back.BLUE,
     'vermelho': Back.RED,
     'cinza': Back.BLACK,
     'branco': Back.WHITE
 }
-VALOR_INICIAL_NO = 1 # Valor que irá ser dado em cada rodada
-VALORES_INICIAIS_NO = [1,3,9,27, None] # Lista para criar o tabuleiro
+VALOR_INICIAL_NO = 1  # Valor que irá ser dado em cada rodada
+VALORES_INICIAIS_NO = [1, 3, 9, 27, None]  # Lista para criar o tabuleiro
 RITMO_DO_JOGO = ['azul', 'vermelho', 'cinza', 'deslizar', 'deslizar']
 CORDENADAS_TABULEIRO = gerarCordenadas(5)
+
 
 class No:
     valor = None
     cor = 'branco'
     score = 0
+
     def __init__(self, valor=None, cor='branco'):
         self.valor = valor
         self.cor = cor
@@ -35,6 +39,7 @@ class No:
         if self.valor:
             return '{:0>2}'.format(str(self.valor))
         return '  '
+
 
 class Tabuleiro:
     matriz = []
@@ -58,7 +63,7 @@ class Tabuleiro:
                 linha.append(novo_no)
             self.matriz.append(linha)
 
-    def printTabuleiro(self,):
+    def printTabuleiro(self, ):
         for linha in self.matriz:
             for elemento in linha:
                 cor = cores[elemento.cor]
@@ -78,8 +83,8 @@ class Tabuleiro:
         self.matriz[linha][coluna] = No()
 
     def splitCoordenada(self, coordenada):
-        linhaParaInserir = (coordenada // 10) - 1 # divide por 10 pra pegar a dezena
-        colunaParaInserir = (coordenada % 10) - 1 # obtém o resto da divisão por 10 para pegar a unidade
+        linhaParaInserir = (coordenada // 10) - 1  # divide por 10 pra pegar a dezena
+        colunaParaInserir = (coordenada % 10) - 1  # obtém o resto da divisão por 10 para pegar a unidade
         return linhaParaInserir, colunaParaInserir
 
     def hasPosicaoVazio(self, coordenada):
@@ -97,12 +102,13 @@ class Tabuleiro:
 
     def deslizarEsquerda(self):
         print('deslizar para esquerda')
-    
+
     def deslizarCima(self):
         print('deslizar para cima')
 
     def deslizar(self, lado):
         self.MOVIMENTOS_DO_JOGO.get(lado)()
+
 
 class Game:
     # tabuleiro = Tabuleiro()
@@ -130,9 +136,9 @@ class Game:
                 entrada = sys.stdin.readline()
                 coordenadaDoOponente = int(entrada.strip())
                 tabuleiro.inserirNoPorCoordenada(coordenadaDoOponente, VALOR_INICIAL_NO,
-                                                 self._getAcaoPorRodada(rodada-1))
+                                                 self._getAcaoPorRodada(rodada - 1))
         else:
-            #jogando como jogador B
+            # jogando como jogador B
             rodada = 2
             while True:
                 entrada = sys.stdin.readline()
@@ -156,13 +162,11 @@ class Game:
                 tabuleiro.inserirNoPorCoordenada(coordenadaDoOponente, VALOR_INICIAL_NO,
                                                  self._getAcaoPorRodada(rodada - 1))
 
-
     def _getAcaoPorRodada(self, rodada):
         return RITMO_DO_JOGO[(rodada - 1) % len(RITMO_DO_JOGO)]
 
     def _getCordenadaAleatoria(self):
         return random.choice(CORDENADAS_TABULEIRO)
-
 
 
 tabuleiro = Tabuleiro()
