@@ -41,18 +41,38 @@ def somaPosicao(lista, movimento):
     retiraEspacosVazios(lista, movimento)
     print(lista)
 
+
+def transporMatriz(matriz):
+    return [list(coluna) for coluna in zip(*matriz)]
+
+
 def deslizarMatriz(matriz, movimento):
-    for i in range(4):
-        somaPosicao(matriz[i], movimento)
+    if movimento == 'R' or movimento == 'L':
+        for i in range(4):
+            somaPosicao(matriz[i], movimento)
+    else:
+        # OBS: PERCEBA QUE O MOVIMENTO DE UP É A MESMA COISA QUE O DE LEFT, E O MOVIMENTO DE DOWN A MESMA COISA
+        #     QUE O MOVIMENTO DE RIGHT, ISSO QUANDO A MATRIZ É TRANSPOSTA
+        matriz_transposta = transporMatriz(matriz)
+        for i in range(4):
+            if movimento == 'U':
+                somaPosicao(matriz_transposta[i], 'L')
+            else:
+                somaPosicao(matriz_transposta[i], 'R')
 
+        # PRECISAMOS AGORA REFAZER A TRANSPOSIÇÃO, PARA VOLTAR A NOSSA MATRIZ ORIGINAL
 
-matriz = [[1, 0, 0, 1],
-          [1, 0, 0, 3],
-          [1, 0, 0, 81],
-          [0, 1, 9, 1]]
+matriz = [[0, 1, 0, 9],
+          [3, 1, 9, 3],
+          [3, 1, 0, 1],
+          [1, 1, 9, 1]]
 
 deslizarMatriz(matriz, 'R')
 
+
+
+
+print('Matriz transposta:')
 
 
 
