@@ -35,10 +35,6 @@ class No:
         if self.valor:
             return '{:0>2}'.format(str(self.valor))
         return '  '
-my_list = []
-for dezena in [1, 2]:
-    for unidade in range(1, 5):
-        my_list.append(dezena * 10 + unidade)
 
 class Tabuleiro:
     matriz = []
@@ -48,11 +44,11 @@ class Tabuleiro:
         self.dimensao = dimensao
         self._iniciarTabuleiro(dimensao)
         self.MOVIMENTOS_DO_JOGO = {
-        'D': self.deslizarBaixo,
-        'R': self.deslizarDireita,
-        'L': self.deslizarEsquerda,
-        'U': self.deslizarCima
-    }
+            'D': self.deslizarBaixo,
+            'R': self.deslizarDireita,
+            'L': self.deslizarEsquerda,
+            'U': self.deslizarCima
+        }
 
     def _iniciarTabuleiro(self, n):
         for i in range(n):
@@ -74,7 +70,6 @@ class Tabuleiro:
         novoNo.cor = cor
         novoNo.valor = valor
         novoNo.score = 0
-        # O que seria o score??
         linhaParaInserir, colunaParaInserir = self.splitCoordenada(coordenada)
         self.matriz[linhaParaInserir][colunaParaInserir] = novoNo
 
@@ -88,7 +83,6 @@ class Tabuleiro:
         return linhaParaInserir, colunaParaInserir
 
     def hasPosicaoVazio(self, coordenada):
-        pass #TODO: Retorna true se o nó estiver vazio. (utilizar a função getNoPorCoordenadas())
         linhaParaInserir, colunaParaInserir = self.splitCoordenada(coordenada)
         if self.matriz[linhaParaInserir][colunaParaInserir].valor is None:
             return True
@@ -110,37 +104,65 @@ class Tabuleiro:
     def deslizar(self, lado):
         self.MOVIMENTOS_DO_JOGO.get(lado)()
 
-        
-
 class Game:
-    rodada = 1
-    #tabuleiro = Tabuleiro()
+    # tabuleiro = Tabuleiro()
     # TODO: Continuar logica aleatória do servidor.
     def __init__(self):
         entrada = sys.stdin.readline()
         if entrada.strip() == "A":
+            rodada = 1
             while True:
-                if self._getAcaoPorRodada() != 'deslizar':
+                entrada = sys.stdin.readline()
+                if (entrada.strip() == "Quit"):
+                    break
+                if self._getAcaoPorRodada(rodada) != 'deslizar':
                     coordenada = self._getCordenadaAleatoria()
                     while not tabuleiro.hasPosicaoVazio(coordenada):
                         coordenada = self._getCordenadaAleatoria()
-                    tabuleiro.inserirNoPorCoordenada(coordenada, VALOR_INICIAL_NO, self._getAcaoPorRodada())
-                    sys.stdout.write(coordenada) # TODO: Revisar isso
+                    tabuleiro.inserirNoPorCoordenada(coordenada, VALOR_INICIAL_NO, self._getAcaoPorRodada(rodada))
+                    print(coordenada)
+                    sys.stdout.flush()
                 else:
-                    comandoDeDeslize = random.choice(list(MOVIMENTOS_DO_JOGO.keys()))
-                    sys.stdout.write(comandoDeDeslize)
-                    self.rodada += 1
-                    entrada = sys.stdin.readline()
-        tabuleiro.printTabuleiro()
+                    comandoDeDeslize = random.choice(list(tabuleiro.MOVIMENTOS_DO_JOGO.keys()))
+                    print(comandoDeDeslize)
+                    sys.stdout.flush()
+                rodada += 2
+                entrada = sys.stdin.readline()
+                coordenadaDoOponente = int(entrada.strip())
+                tabuleiro.inserirNoPorCoordenada(coordenadaDoOponente, VALOR_INICIAL_NO,
+                                                 self._getAcaoPorRodada(rodada-1))
+        else:
+            #jogando como jogador B
+            rodada = 2
+            while True:
+                entrada = sys.stdin.readline()
+                if (entrada.strip() == "Quit"):
+                    break
 
-    def _getAcaoPorRodada(self):
-        return RITMO_DO_JOGO[(self.rodada - 1) % len(RITMO_DO_JOGO)]
+                if self._getAcaoPorRodada(rodada) != 'deslizar':
+                    coordenada = self._getCordenadaAleatoria()
+                    while not tabuleiro.hasPosicaoVazio(coordenada):
+                        coordenada = self._getCordenadaAleatoria()
+                    tabuleiro.inserirNoPorCoordenada(coordenada, VALOR_INICIAL_NO, self._getAcaoPorRodada(rodada))
+                    print(coordenada)
+                    sys.stdout.flush()
+                else:
+                    comandoDeDeslize = random.choice(list(tabuleiro.MOVIMENTOS_DO_JOGO.keys()))
+                    print(comandoDeDeslize)
+                    sys.stdout.flush()
+                rodada += 2
+                entrada = sys.stdin.readline()
+                coordenadaDoOponente = int(entrada.strip())
+                tabuleiro.inserirNoPorCoordenada(coordenadaDoOponente, VALOR_INICIAL_NO,
+                                                 self._getAcaoPorRodada(rodada - 1))
+
+
+    def _getAcaoPorRodada(self, rodada):
+        return RITMO_DO_JOGO[(rodada - 1) % len(RITMO_DO_JOGO)]
 
     def _getCordenadaAleatoria(self):
-        random.choice(CORDENADAS_TABULEIRO)
+        return random.choice(CORDENADAS_TABULEIRO)
 
-# if __name__ == "__main__":
-#     # TODO: Aqui o jogo será iniciado...
 
 
 tabuleiro = Tabuleiro()
