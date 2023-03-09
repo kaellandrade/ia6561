@@ -1,6 +1,6 @@
 def retiraEspacosVazios(lista, movimento):
     match movimento:
-        case 'L':
+        case 'L': ## De baixo para cima
             j = 0
             for i in range(len(lista)):
                 if lista[i] == 0:
@@ -8,7 +8,7 @@ def retiraEspacosVazios(lista, movimento):
                 elif lista[i-j] == 0:
                     lista[i-j] = lista[i]
                     lista[i] = 0
-        case 'R':
+        case 'R': ## De cima para baixo
             j = 0
             for i in range(len(lista),0,-1):
                 if lista[i-1] == 0:
