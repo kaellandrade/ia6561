@@ -131,7 +131,6 @@ if entrada.strip() == "A":
             tabuleiro.inserirNoPorCoordenada(coordenadaDoOponente, VALOR_INICIAL_NO,
                                              game.getAcaoPorRodada(rodada - 1))
 
-
 else:
     # jogando como jogador B
     rodada = 2
