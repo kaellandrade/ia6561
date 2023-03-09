@@ -41,11 +41,17 @@ def somaPosicao(lista, movimento):
     retiraEspacosVazios(lista, movimento)
     print(lista)
 
-lista1 = [27,9,3,27,9,9,1,3,3,1,9,9,9,27]
-somaPosicao(lista1,'L')
+def deslizarMatriz(matriz, movimento):
+    for i in range(4):
+        somaPosicao(matriz[i], movimento)
 
-lista2 = [27,9,3,27,9,9,1,3,3,1,9,9,0,27]
-somaPosicao(lista2, 'R')
 
-#for i in range(len(lista), 0, -1):
-#    print(lista[i-1])
+matriz = [[1, 0, 0, 1],
+          [1, 0, 0, 3],
+          [1, 0, 0, 81],
+          [0, 1, 9, 1]]
+
+deslizarMatriz(matriz, 'R')
+
+
+

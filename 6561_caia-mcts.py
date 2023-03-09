@@ -135,7 +135,6 @@ else:
     # jogando como jogador B
     rodada = 2
     while True:
-        entrada = sys.stdin.readline()
         if entrada.strip() == "Quit":
             break
         if game.getAcaoPorRodada(rodada) != 'deslizar':
