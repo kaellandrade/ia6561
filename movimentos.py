@@ -19,6 +19,7 @@ def retiraEspacosVazios(lista, movimento):
 
 
 def somaPosicao(lista, movimento):
+    # TODO: a função está juntando mais de duas peças numa mesma ação -> contra as regras
     retiraEspacosVazios(lista, movimento)
     match movimento:
         case 'L':
@@ -39,7 +40,7 @@ def somaPosicao(lista, movimento):
                 i+=1
 
     retiraEspacosVazios(lista, movimento)
-    print(lista)
+
 
 
 def transporMatriz(matriz):
@@ -50,6 +51,8 @@ def deslizarMatriz(matriz, movimento):
     if movimento == 'R' or movimento == 'L':
         for i in range(4):
             somaPosicao(matriz[i], movimento)
+        for i in range(4):
+            print(matriz[i])
     else:
         # OBS: PERCEBA QUE O MOVIMENTO DE UP É A MESMA COISA QUE O DE LEFT, E O MOVIMENTO DE DOWN A MESMA COISA
         #     QUE O MOVIMENTO DE RIGHT, ISSO QUANDO A MATRIZ É TRANSPOSTA
@@ -59,20 +62,19 @@ def deslizarMatriz(matriz, movimento):
                 somaPosicao(matriz_transposta[i], 'L')
             else:
                 somaPosicao(matriz_transposta[i], 'R')
+        matriz_movimentada = transporMatriz(matriz_transposta)
+        for i in range(4):
+            print(matriz_movimentada[i])
 
-        # PRECISAMOS AGORA REFAZER A TRANSPOSIÇÃO, PARA VOLTAR A NOSSA MATRIZ ORIGINAL
 
-matriz = [[0, 1, 0, 9],
+matriz = [[1, 1, 1, 1],
           [3, 1, 9, 3],
           [3, 1, 0, 1],
           [1, 1, 9, 1]]
 
-deslizarMatriz(matriz, 'R')
+deslizarMatriz(matriz, 'L')
 
 
-
-
-print('Matriz transposta:')
 
 
 
