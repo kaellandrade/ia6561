@@ -193,22 +193,35 @@ class Tabuleiro:
         :return: Void
         """
         self._isolarEspacosVazios(lista, movimento)
+        TAMANHO_LISTA = len(lista)
         match movimento:
             case 'L':
                 i = 1
-                while i < len(lista):
+                while i < TAMANHO_LISTA:
                     if not lista[i - 1].isNoVazio():
-                        if lista[i - 1].getValor() == lista[i].getValor():
+                        noA = lista[i - 1]
+                        noB = lista[i]
+                        # Mesclando peças (mesma cor e mesmo valor)
+                        if noA.getValor() == noB.getValor() and noA.getCor() == noB.getCor():
                             lista[i - 1].setValor(3 * lista[i].getValor())
+                            lista[i] = No()
+                        # Limpando as casas (Mesmo valor, porém com cores distintas)
+                        if noA.getValor() == noB.getValor() and noA.getCor() != noB.getCor():
+                            lista[i-1] = No()
                             lista[i] = No()
                     i += 1
             case 'R':
                 i = 1
-                while i < len(lista):
-                    if not lista[len(lista) - i].isNoVazio():
-                        if lista[len(lista) - 1 - i].getValor() == lista[len(lista) - i].getValor():
-                            lista[len(lista) - i].setValor(3 * lista[len(lista) - i - 1].getValor())
-                            lista[len(lista) - i - 1] = No()
+                while i < TAMANHO_LISTA:
+                    noA = lista[TAMANHO_LISTA - i]
+                    noB = lista[TAMANHO_LISTA - 1 - i]
+                    if not noA.isNoVazio():
+                        if noA.getValor() == noB.getValor() and noA.getCor() == noB.getCor():
+                            noA.setValor(3 * noB.getValor())
+                            lista[TAMANHO_LISTA - i - 1] = No()
+                        if noA.getValor() == noB.getValor() and noA.getCor() != noB.getCor():
+                            lista[TAMANHO_LISTA - i] = No()
+                            lista[TAMANHO_LISTA - 1 - i] = No()
                     i += 1
 
         self._isolarEspacosVazios(lista, movimento)
@@ -292,14 +305,30 @@ def runCaia():
                 print(coordenada)
                 sys.stdout.flush()
             else:
-                comandoDeDeslize = random.choice(list(tabuleiro.MOVIMENTOS.keys()))
+                #Comando de deslize.
+                ultimoDeslizeDoJogadorB = entrada.strip()
+                deslizesPossiveis = list(filter(lambda comando: comando != ultimoDeslizeDoJogadorB, list(tabuleiro.MOVIMENTOS.keys())))
+                comandoDeDeslize = random.choice(deslizesPossiveis)
+                tabuleiro.deslizar(comandoDeDeslize)
                 print(comandoDeDeslize)
                 sys.stdout.flush()
             rodada += 2
 
             # Prever a jogada do adversário
             entrada = sys.stdin.readline()
-            if game.getAcaoPorRodada(rodada - 1) != 'deslizar':
+            if entrada.strip() == PARA_ESQUERDA:
+                tabuleiro.deslizar(PARA_ESQUERDA)
+
+            if entrada.strip() == PARA_DIREITA:
+                tabuleiro.deslizar(PARA_DIREITA)
+
+            if entrada.strip() == PARA_CIMA:
+                tabuleiro.deslizar(PARA_CIMA)
+
+            if entrada.strip() == PARA_BAIXO:
+                tabuleiro.deslizar(PARA_BAIXO)
+
+            if entrada.strip() != "Quit" and game.getAcaoPorRodada(rodada - 1) != 'deslizar':
                 coordenadaDoOponente = int(entrada.strip())
                 tabuleiro.inserirNoPorCoordenada(coordenadaDoOponente, VALOR_INICIAL_NO,
                                                  game.getAcaoPorRodada(rodada - 1))
@@ -319,29 +348,47 @@ def runCaia():
                 sys.stdout.flush()
             else:
                 comandoDeDeslize = random.choice(list(tabuleiro.MOVIMENTOS.keys()))
+                tabuleiro.deslizar(comandoDeDeslize)
                 print(comandoDeDeslize)
                 sys.stdout.flush()
             rodada += 2
 
             # Prever a jogada do adversário
             entrada = sys.stdin.readline()
-            if game.getAcaoPorRodada(rodada - 1) != 'deslizar':
+            if entrada.strip() == PARA_ESQUERDA:
+                tabuleiro.deslizar(PARA_ESQUERDA)
+
+            if entrada.strip() == PARA_DIREITA:
+                tabuleiro.deslizar(PARA_DIREITA)
+
+            if entrada.strip() == PARA_CIMA:
+                tabuleiro.deslizar(PARA_CIMA)
+
+            if entrada.strip() == PARA_BAIXO:
+                tabuleiro.deslizar(PARA_BAIXO)
+
+            if entrada.strip() != "Quit" and game.getAcaoPorRodada(rodada - 1) != 'deslizar':
                 coordenadaDoOponente = int(entrada.strip())
                 tabuleiro.inserirNoPorCoordenada(coordenadaDoOponente, VALOR_INICIAL_NO,
                                                  game.getAcaoPorRodada(rodada - 1))
 
 
 if __name__ == "__main__":
-    # runCaia()
-    tabuleiro = Tabuleiro()
-    # tabuleiro.inserirNoPorCoordenada(12, 1, COR_CINZA)
-    # tabuleiro.inserirNoPorCoordenada(14, 9, COR_VERMELHO)
-
-    tabuleiro.inserirNoPorCoordenada(21, 3, COR_VERMELHO)
-    tabuleiro.inserirNoPorCoordenada(22, 1, COR_AZUL)
-    tabuleiro.inserirNoPorCoordenada(23, 9, COR_AZUL)
-    tabuleiro.inserirNoPorCoordenada(24, 3, COR_CINZA)
-
+    runCaia()
+    # tabuleiro = Tabuleiro()
+    # tabuleiro.inserirNoPorCoordenada(43, 1, COR_AZUL)
+    # tabuleiro.inserirNoPorCoordenada(34, 1, COR_VERMELHO)
+    # tabuleiro.inserirNoPorCoordenada(13, 1, COR_CINZA)
+    # tabuleiro.printTabuleiro()
+    # tabuleiro.deslizar(PARA_ESQUERDA)
+    # tabuleiro.deslizar(PARA_CIMA)
+    # tabuleiro.printTabuleiro()
+    #
+    # tabuleiro.inserirNoPorCoordenada(21, 3, COR_VERMELHO)
+    # tabuleiro.inserirNoPorCoordenada(22, 1, COR_AZUL)
+    # tabuleiro.inserirNoPorCoordenada(23, 9, COR_AZUL)
+    # tabuleiro.inserirNoPorCoordenada(24, 3, COR_CINZA)
+    #
     # tabuleiro.inserirNoPorCoordenada(31, 3, COR_VERMELHO)
     # tabuleiro.inserirNoPorCoordenada(32, 1, COR_AZUL)
     # tabuleiro.inserirNoPorCoordenada(34, 1, COR_CINZA)
@@ -352,7 +399,7 @@ if __name__ == "__main__":
     # tabuleiro.inserirNoPorCoordenada(44, 1, COR_CINZA)
 
 
-    tabuleiro.printTabuleiro()
+    # tabuleiro.printTabuleiro()
 
     # print('Depois do giro para esquerda')
     # tabuleiro.deslizar(PARA_ESQUERDA)
@@ -362,6 +409,10 @@ if __name__ == "__main__":
     # tabuleiro.printTabuleiro()
     # print('Depois do giro para cima')
     # tabuleiro.deslizar(PARA_CIMA)
+    # tabuleiro.printTabuleiro()
+
+    # print('Depois do giro para direita')
+    # tabuleiro.deslizar(PARA_DIREITA)
     # tabuleiro.printTabuleiro()
     # print('Depois do giro para baixo')
     # tabuleiro.deslizar(PARA_BAIXO)
