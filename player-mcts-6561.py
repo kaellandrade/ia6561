@@ -4,16 +4,6 @@ import random
 from colorama import Back, Style
 import copy
 
-
-# Funções úteis para modelagem.
-def gerarCordenadas(n=4):
-    cordenadas = []
-    for linha in range(1, n + 1):
-        for coluna in range(1, n + 1):
-            cordenadas.append(linha * 10 + coluna)
-    return cordenadas
-
-
 COR_VERMELHO = 'vermelho'
 COR_AZUL = 'azul'
 COR_CINZA = 'cinza'
@@ -27,22 +17,34 @@ cores = {
     COR_VERMELHO: Back.RED,
     COR_AZUL: Back.BLUE,
     COR_CINZA: Back.BLACK,
-    'branco': Back.WHITE # Não tem no jogo (controle interno da estrutura)
+    'branco': Back.WHITE  # Não tem no jogo (controle interno da estrutura)
 }
 VALOR_INICIAL_NO = 1  # Valor que irá ser dado em cada rodada
 VALORES_INICIAIS_NO = [1, 3, 9, 27, None]  # Lista para criar o tabuleiro
 RITMO_DO_JOGO = ['azul', 'vermelho', 'cinza', 'deslizar', 'deslizar']
 
-# Lista de inteiros representado as coordenadas do tabuleiro
-# |11|12|13|14|
-# |21|22|23|24|
-# ...
-CORDENADAS_TABULEIRO = gerarCordenadas(4)
+
+def gerarCoordenadas(n=4):
+    """
+    Função para gerar uma lista com todas as coodernadas que existem em um tabuleiro/matriz 4x4.
+    Exemplo:
+        [11, 12, 13, 14, 21, 22, 23, 24, 31, 32, 33, 34, 41, 42, 43, 44]
+    :param n:
+    :return:
+    """
+    cordenadas = []
+    for linha in range(1, n + 1):
+        for coluna in range(1, n + 1):
+            cordenadas.append(linha * 10 + coluna)
+    return cordenadas
+
+
+CORDENADAS_TABULEIRO = gerarCoordenadas(4)
 
 
 class No:
     """
-    Classe que representa um no no tabuleiro. (Vazio ou não)
+    Classe que representa um No em um tabuleiro. (Vazio ou não)
     """
     valor = None
     cor = 'branco'
@@ -58,6 +60,10 @@ class No:
         self.cor = cor
 
     def __str__(self):
+        """
+        Função para formatar a impressão das casas do tabuleiro através da função print()
+        :return:
+        """
         if self.valor:
             return '{:0>2}'.format(str(self.valor))
         return '  '
@@ -88,10 +94,10 @@ class Tabuleiro:
     matriz = []
     dimensao = 4
 
-    def __init__(self, dimensao=4, inicializarNos = True):
+    def __init__(self, dimensao=4, inicializarNos=True):
         """
-        Construtor da da Classe Tabuleiro
-        Inicia meu tabuleiro com todos os Nós vazio.
+        Construtor da Classe Tabuleiro.
+        Inicia meu tabuleiro com todos os Nós vazios.
         :param dimensao: Dimensão do meu tabuleiro (4 por padrão)
         """
         self.dimensao = dimensao
@@ -142,7 +148,7 @@ class Tabuleiro:
         linhaParaInserir, colunaParaInserir = self._splitCoordenada(coordenada)
         self.matriz[linhaParaInserir][colunaParaInserir] = novoNo
 
-    def liparNoPorCordenada(self, coordenada):
+    def limparNoPorCoordenada(self, coordenada):
         """
         Recebe uma coordenada no formato xx e torna seu nó vazio.
         :param coordenada: Inteiro
@@ -153,7 +159,7 @@ class Tabuleiro:
 
     def _splitCoordenada(self, coordenada):
         """
-        Rece uma coordenada xx(padrão do jogo) e retorna uma coordenada válida para a matriz do tabuleiro.
+        Recebe uma coordenada xx(padrão do jogo) e retorna uma coordenada válida para a matriz do tabuleiro.
         :param coordenada:
         :return: Void
         """
@@ -162,6 +168,11 @@ class Tabuleiro:
         return linhaParaInserir, colunaParaInserir
 
     def hasPosicaoVazio(self, coordenada):
+        """
+        Recebe uma coordenada no formato xx e verifica se essa posição na matriz/tabuleiro está vazia.
+        :param coordenada:
+        :return: Booleano
+        """
         linhaParaInserir, colunaParaInserir = self._splitCoordenada(coordenada)
         if self.matriz[linhaParaInserir][colunaParaInserir].valor is None:
             return True
@@ -171,12 +182,12 @@ class Tabuleiro:
     def _isolarEspacosVazios(self, lista, movimento):
         """
         Isola os espaços vazios de cada linha da matriz.
-        :param lista: lista de No
-        :param movimento: R,L
+        :param lista: Lista de No
+        :param movimento: R, L
         :return: Void
         """
         match movimento:
-            case 'L':  ## De baixo para cima
+            case 'L':  # De baixo para cima
                 j = 0
                 for i in range(len(lista)):
                     if lista[i].isNoVazio():
@@ -184,7 +195,7 @@ class Tabuleiro:
                     elif lista[i - j].isNoVazio():
                         lista[i - j] = lista[i]
                         lista[i] = No()
-            case 'R':  ## De cima para baixo
+            case 'R':  # De cima para baixo
                 j = 0
                 for i in range(len(lista), 0, -1):
                     if lista[i - 1].isNoVazio():
@@ -235,6 +246,11 @@ class Tabuleiro:
         self._isolarEspacosVazios(lista, movimento)
 
     def _transporMatriz(self, matriz):
+        """
+        Função que recebe uma matriz e a modifica para ser equivalente à sua transposta.
+        :param matriz:
+        :return:
+        """
         for i in range(len(matriz)):
             for j in range(i + 1, len(matriz[0])):
                 matriz[i][j], matriz[j][i] = matriz[j][i], matriz[i][j]
@@ -242,7 +258,7 @@ class Tabuleiro:
     def _deslizarBaixo(self):
         """
         Desliza o tabuleiro para baixo utilizando a lógica de transposição de matriz.
-        Deslizar uma matriz m para baixo é a mesma coisa que deslizar a sua transposta para a direita.
+        Deslizar uma matriz para baixo é a mesma coisa que deslizar a sua transposta para a direita.
         :return: Void
         """
         self._transporMatriz(self.matriz)
@@ -266,7 +282,6 @@ class Tabuleiro:
         for i in range(self.dimensao):
             self._aplicarRegraLinha(self.matriz[i], PARA_ESQUERDA)
 
-
     def _deslizarCima(self):
         """
         Desliza o tabuleiro para cima utilizando a lógica de transposição de matriz.
@@ -283,7 +298,7 @@ class Tabuleiro:
         Verifica se um movimento de deslize é válido.
         Caso o deslize não mude a configuração do tabuleiro, esse deslize é inválido.
         """
-        novoTabuleiro = Tabuleiro(4, False) # Não quero iniciar os nós pois irei pegar do tabuleiro original.
+        novoTabuleiro = Tabuleiro(4, False)  # Não quero iniciar os nós, pois irei pegar do tabuleiro original.
         copiaDaMatrizOriginal = self.getCopiaDaMatriz()
         novoTabuleiro.setMatrizNos(copiaDaMatrizOriginal)
         novoTabuleiro.deslizar(movimentoDeDeslize)
@@ -306,7 +321,6 @@ class Tabuleiro:
     def getCopiaDaMatriz(self):
         return copy.deepcopy(self.matriz)
 
-
     def deslizar(self, lado):
         """
         Desliza o tabuleiro para uma das quatro direções.
@@ -317,13 +331,27 @@ class Tabuleiro:
 
 class Game:
     def getAcaoPorRodada(self, rodada):
+        """
+        Função que, através da rodada atual, descobre qual deve ser a minha jogada.
+        Ex: estando na rodada x, devo colocar uma peça azul, vermelha, cinza, ou deslizar o tabuleiro?
+        :param rodada:
+        :return:
+        """
         return RITMO_DO_JOGO[(rodada - 1) % len(RITMO_DO_JOGO)]
 
     def getCordenadaAleatoria(self):
+        """
+        Função para escolher aleatoriamente uma posição do tabuleiro para o jogador jogar.
+        :return:
+        """
         return random.choice(CORDENADAS_TABULEIRO)
 
 
 def runCaia():
+    """
+    Função principal para iniciar um jogador no caia.
+    :return:
+    """
     entrada = sys.stdin.readline()
     tabuleiro = Tabuleiro()
     game = Game()
@@ -341,7 +369,7 @@ def runCaia():
                 print(coordenada)
                 sys.stdout.flush()
             else:
-                #Comando de deslize.
+                # Comando de deslize.
                 deslizesPossiveis = list(tabuleiro.MOVIMENTOS.keys())
                 comandoDeDeslize = random.choice(deslizesPossiveis)
 
@@ -353,7 +381,7 @@ def runCaia():
                 sys.stdout.flush()
             rodada += 2
 
-            # Prever a jogada do adversário
+            # Prever a jogada adversária
             entrada = sys.stdin.readline()
             if entrada.strip() == PARA_ESQUERDA:
                 tabuleiro.deslizar(PARA_ESQUERDA)
@@ -395,7 +423,7 @@ def runCaia():
                 sys.stdout.flush()
             rodada += 2
 
-            # Prever a jogada do adversário
+            # Prever a jogada adversária
             entrada = sys.stdin.readline()
             if entrada.strip() == PARA_ESQUERDA:
                 tabuleiro.deslizar(PARA_ESQUERDA)
@@ -415,8 +443,11 @@ def runCaia():
                                                  game.getAcaoPorRodada(rodada - 1))
 
 
-if __name__ == "__main__":
-    # runCaia()
+def runLocal():
+    """
+    Função para realizar testes no algoritmo independente do caia
+    :return:
+    """
     tabuleiro = Tabuleiro()
     print('Configuração inicial')
     tabuleiro.printTabuleiro()
@@ -463,3 +494,7 @@ if __name__ == "__main__":
     tabuleiro.deslizar(PARA_BAIXO)
     tabuleiro.printTabuleiro()
 
+
+if __name__ == "__main__":
+    runCaia()
+    runLocal()
