@@ -23,8 +23,8 @@ PARA_BAIXO = 'D'
 PARA_CIMA = 'U'
 
 cores = {
-    COR_VERMELHO: Back.BLUE,
-    COR_AZUL: Back.RED,
+    COR_VERMELHO: Back.RED,
+    COR_AZUL: Back.BLUE,
     COR_CINZA: Back.BLACK,
     'branco': Back.WHITE # Não tem no jogo (controle interno da estrutura)
 }
@@ -219,11 +219,10 @@ class Tabuleiro:
                 matriz[i][j], matriz[j][i] = matriz[j][i], matriz[i][j]
 
     def _deslizarBaixo(self):
-        # TODO: utilizar a lógica de transposição
         """
         Desliza o tabuleiro para baixo utilizando a lógica de transposição de matriz.
         Deslizar uma matriz m para baixo é a mesma coisa que deslizar a sua transposta para a direita.
-        :return:
+        :return: Void
         """
         self._transporMatriz(self.matriz)
         for i in range(4):
@@ -248,7 +247,6 @@ class Tabuleiro:
 
 
     def _deslizarCima(self):
-        # TODO: utilizar a lógica de transposição
         """
         Desliza o tabuleiro para cima utilizando a lógica de transposição de matriz.
         Deslizar uma matriz m para cima é a mesma coisa que deslizar a sua transposta para a esquerda.
@@ -261,6 +259,10 @@ class Tabuleiro:
 
 
     def deslizar(self, lado):
+        """
+        Desliza o tabuleiro para uma das quatro direções.
+        :return: Void
+        """
         self.MOVIMENTOS.get(lado)()
 
 
@@ -332,25 +334,36 @@ def runCaia():
 if __name__ == "__main__":
     # runCaia()
     tabuleiro = Tabuleiro()
-    tabuleiro.inserirNoPorCoordenada(11, 1, COR_VERMELHO)
-    tabuleiro.inserirNoPorCoordenada(12, 1, COR_AZUL)
-    tabuleiro.inserirNoPorCoordenada(14, 1, COR_CINZA)
+    # tabuleiro.inserirNoPorCoordenada(12, 1, COR_CINZA)
+    # tabuleiro.inserirNoPorCoordenada(14, 9, COR_VERMELHO)
 
-    tabuleiro.inserirNoPorCoordenada(31, 1, COR_VERMELHO)
-    tabuleiro.inserirNoPorCoordenada(32, 1, COR_AZUL)
-    tabuleiro.inserirNoPorCoordenada(24, 1, COR_CINZA)
+    tabuleiro.inserirNoPorCoordenada(21, 3, COR_VERMELHO)
+    tabuleiro.inserirNoPorCoordenada(22, 1, COR_AZUL)
+    tabuleiro.inserirNoPorCoordenada(23, 9, COR_AZUL)
+    tabuleiro.inserirNoPorCoordenada(24, 3, COR_CINZA)
+
+    # tabuleiro.inserirNoPorCoordenada(31, 3, COR_VERMELHO)
+    # tabuleiro.inserirNoPorCoordenada(32, 1, COR_AZUL)
+    # tabuleiro.inserirNoPorCoordenada(34, 1, COR_CINZA)
+    #
+    # tabuleiro.inserirNoPorCoordenada(41, 3, COR_AZUL)
+    # tabuleiro.inserirNoPorCoordenada(42, 1, COR_VERMELHO)
+    # tabuleiro.inserirNoPorCoordenada(43, 9, COR_AZUL)
+    # tabuleiro.inserirNoPorCoordenada(44, 1, COR_CINZA)
+
+
     tabuleiro.printTabuleiro()
 
-    print('Depois do giro para esquerda')
-    tabuleiro.deslizar(PARA_ESQUERDA)
-    tabuleiro.printTabuleiro()
-    print('Depois do giro para direita')
-    tabuleiro.deslizar(PARA_DIREITA)
-    tabuleiro.printTabuleiro()
-    print('Depois do giro para cima')
-    tabuleiro.deslizar(PARA_CIMA)
-    tabuleiro.printTabuleiro()
-    print('Depois do giro para baixo')
-    tabuleiro.deslizar(PARA_BAIXO)
-    tabuleiro.printTabuleiro()
+    # print('Depois do giro para esquerda')
+    # tabuleiro.deslizar(PARA_ESQUERDA)
+    # tabuleiro.printTabuleiro()
+    # print('Depois do giro para direita')
+    # tabuleiro.deslizar(PARA_DIREITA)
+    # tabuleiro.printTabuleiro()
+    # print('Depois do giro para cima')
+    # tabuleiro.deslizar(PARA_CIMA)
+    # tabuleiro.printTabuleiro()
+    # print('Depois do giro para baixo')
+    # tabuleiro.deslizar(PARA_BAIXO)
+    # tabuleiro.printTabuleiro()
 
