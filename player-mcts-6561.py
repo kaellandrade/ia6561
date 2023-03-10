@@ -214,6 +214,7 @@ class Tabuleiro:
         self._isolarEspacosVazios(lista, movimento)
 
     def _deslizarBaixo(self):
+        # TODO: utilizar a lógica de transposição
         print('deslizar para baixo')
 
     def _deslizarDireita(self):
@@ -233,6 +234,7 @@ class Tabuleiro:
             self._aplicarRegraLinha(self.matriz[i], PARA_ESQUERDA)
 
     def _deslizarCima(self):
+        # TODO: utilizar a lógica de transposição
         print('deslizar para cima')
 
     def deslizar(self, lado):
@@ -321,5 +323,4 @@ if __name__ == "__main__":
     print('Depois do giro para direita')
     tabuleiro.deslizar(PARA_DIREITA)
     tabuleiro.printTabuleiro()
-
 
