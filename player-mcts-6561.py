@@ -2,6 +2,7 @@
 import sys
 import random
 from colorama import Back, Style
+import copy
 
 
 # Funções úteis para modelagem.
@@ -73,6 +74,12 @@ class No:
     def setValor(self, valor):
         self.valor = valor
 
+    def isMesmaConfiguracao(self, no2):
+        """
+        Verifica se um dado nó possui a mesma configuração que o nó atual.
+        """
+        return self.getCor() == no2.getCor() and self.getValor() == no2.getValor()
+
 
 class Tabuleiro:
     """
@@ -81,14 +88,15 @@ class Tabuleiro:
     matriz = []
     dimensao = 4
 
-    def __init__(self, dimensao=4):
+    def __init__(self, dimensao=4, inicializarNos = True):
         """
         Construtor da da Classe Tabuleiro
         Inicia meu tabuleiro com todos os Nós vazio.
         :param dimensao: Dimensão do meu tabuleiro (4 por padrão)
         """
         self.dimensao = dimensao
-        self._iniciarTabuleiro()
+        if inicializarNos:
+            self._iniciarTabuleiro()
         self.MOVIMENTOS = {
             PARA_BAIXO: self._deslizarBaixo,
             PARA_DIREITA: self._deslizarDireita,
@@ -270,6 +278,34 @@ class Tabuleiro:
             self._aplicarRegraLinha(self.matriz[i], PARA_ESQUERDA)
         self._transporMatriz(self.matriz)                              # Retornar para a matriz original
 
+    def isDesLizeValido(self, movimentoDeDeslize):
+        """
+        Verifica se um movimento de deslize é válido.
+        Caso o deslize não mude a configuração do tabuleiro, esse deslize é inválido.
+        """
+        novoTabuleiro = Tabuleiro(4, False) # Não quero iniciar os nós pois irei pegar do tabuleiro original.
+        copiaDaMatrizOriginal = self.getCopiaDaMatriz()
+        novoTabuleiro.setMatrizNos(copiaDaMatrizOriginal)
+        novoTabuleiro.deslizar(movimentoDeDeslize)
+        return not self._hasMesmaConfiguracao(novoTabuleiro)
+
+    def _hasMesmaConfiguracao(self, tabuleiro2):
+        """
+        Verifica se um dado tabuleiro tem a mesma configuração do atual.
+        """
+        for i in range(len(self.matriz)):
+            for j in range(len(self.matriz)):
+                if not self.matriz[i][j].isMesmaConfiguracao(tabuleiro2.matriz[i][j]):
+                    return False
+
+        return True
+
+    def setMatrizNos(self, matriz):
+        self.matriz = matriz
+
+    def getCopiaDaMatriz(self):
+        return copy.deepcopy(self.matriz)
+
 
     def deslizar(self, lado):
         """
@@ -306,9 +342,12 @@ def runCaia():
                 sys.stdout.flush()
             else:
                 #Comando de deslize.
-                ultimoDeslizeDoJogadorB = entrada.strip()
-                deslizesPossiveis = list(filter(lambda comando: comando != ultimoDeslizeDoJogadorB, list(tabuleiro.MOVIMENTOS.keys())))
+                deslizesPossiveis = list(tabuleiro.MOVIMENTOS.keys())
                 comandoDeDeslize = random.choice(deslizesPossiveis)
+
+                while not tabuleiro.isDesLizeValido(comandoDeDeslize):
+                    comandoDeDeslize = random.choice(list(tabuleiro.MOVIMENTOS.keys()))
+
                 tabuleiro.deslizar(comandoDeDeslize)
                 print(comandoDeDeslize)
                 sys.stdout.flush()
@@ -348,6 +387,9 @@ def runCaia():
                 sys.stdout.flush()
             else:
                 comandoDeDeslize = random.choice(list(tabuleiro.MOVIMENTOS.keys()))
+                while not tabuleiro.isDesLizeValido(comandoDeDeslize):
+                    comandoDeDeslize = random.choice(list(tabuleiro.MOVIMENTOS.keys()))
+
                 tabuleiro.deslizar(comandoDeDeslize)
                 print(comandoDeDeslize)
                 sys.stdout.flush()
@@ -374,47 +416,50 @@ def runCaia():
 
 
 if __name__ == "__main__":
-    runCaia()
-    # tabuleiro = Tabuleiro()
-    # tabuleiro.inserirNoPorCoordenada(43, 1, COR_AZUL)
-    # tabuleiro.inserirNoPorCoordenada(34, 1, COR_VERMELHO)
-    # tabuleiro.inserirNoPorCoordenada(13, 1, COR_CINZA)
-    # tabuleiro.printTabuleiro()
-    # tabuleiro.deslizar(PARA_ESQUERDA)
-    # tabuleiro.deslizar(PARA_CIMA)
-    # tabuleiro.printTabuleiro()
-    #
-    # tabuleiro.inserirNoPorCoordenada(21, 3, COR_VERMELHO)
-    # tabuleiro.inserirNoPorCoordenada(22, 1, COR_AZUL)
-    # tabuleiro.inserirNoPorCoordenada(23, 9, COR_AZUL)
-    # tabuleiro.inserirNoPorCoordenada(24, 3, COR_CINZA)
-    #
-    # tabuleiro.inserirNoPorCoordenada(31, 3, COR_VERMELHO)
-    # tabuleiro.inserirNoPorCoordenada(32, 1, COR_AZUL)
-    # tabuleiro.inserirNoPorCoordenada(34, 1, COR_CINZA)
-    #
-    # tabuleiro.inserirNoPorCoordenada(41, 3, COR_AZUL)
-    # tabuleiro.inserirNoPorCoordenada(42, 1, COR_VERMELHO)
-    # tabuleiro.inserirNoPorCoordenada(43, 9, COR_AZUL)
-    # tabuleiro.inserirNoPorCoordenada(44, 1, COR_CINZA)
+    # runCaia()
+    tabuleiro = Tabuleiro()
+    print('Configuração inicial')
+    tabuleiro.printTabuleiro()
+    tabuleiro.inserirNoPorCoordenada(43, 1, COR_AZUL)
+    tabuleiro.inserirNoPorCoordenada(34, 1, COR_VERMELHO)
+    tabuleiro.inserirNoPorCoordenada(13, 1, COR_CINZA)
 
+    tabuleiro.inserirNoPorCoordenada(21, 3, COR_VERMELHO)
+    tabuleiro.inserirNoPorCoordenada(22, 1, COR_AZUL)
+    tabuleiro.inserirNoPorCoordenada(23, 9, COR_AZUL)
+    tabuleiro.inserirNoPorCoordenada(24, 3, COR_CINZA)
 
-    # tabuleiro.printTabuleiro()
+    tabuleiro.inserirNoPorCoordenada(31, 3, COR_VERMELHO)
+    tabuleiro.inserirNoPorCoordenada(32, 1, COR_AZUL)
+    tabuleiro.inserirNoPorCoordenada(34, 1, COR_CINZA)
 
-    # print('Depois do giro para esquerda')
-    # tabuleiro.deslizar(PARA_ESQUERDA)
-    # tabuleiro.printTabuleiro()
-    # print('Depois do giro para direita')
-    # tabuleiro.deslizar(PARA_DIREITA)
-    # tabuleiro.printTabuleiro()
-    # print('Depois do giro para cima')
-    # tabuleiro.deslizar(PARA_CIMA)
-    # tabuleiro.printTabuleiro()
+    tabuleiro.inserirNoPorCoordenada(41, 3, COR_AZUL)
+    tabuleiro.inserirNoPorCoordenada(42, 1, COR_VERMELHO)
+    tabuleiro.inserirNoPorCoordenada(43, 9, COR_AZUL)
+    tabuleiro.inserirNoPorCoordenada(44, 1, COR_CINZA)
 
-    # print('Depois do giro para direita')
-    # tabuleiro.deslizar(PARA_DIREITA)
-    # tabuleiro.printTabuleiro()
-    # print('Depois do giro para baixo')
-    # tabuleiro.deslizar(PARA_BAIXO)
-    # tabuleiro.printTabuleiro()
+    print('Giro para direita')
+    tabuleiro.deslizar(PARA_DIREITA)
+    tabuleiro.printTabuleiro()
+
+    print('Giro para cima')
+    tabuleiro.deslizar(PARA_CIMA)
+    tabuleiro.printTabuleiro()
+
+    print('Depois do giro para esquerda')
+    tabuleiro.deslizar(PARA_ESQUERDA)
+    tabuleiro.printTabuleiro()
+    print('Depois do giro para direita')
+    tabuleiro.deslizar(PARA_DIREITA)
+    tabuleiro.printTabuleiro()
+    print('Depois do giro para cima')
+    tabuleiro.deslizar(PARA_CIMA)
+    tabuleiro.printTabuleiro()
+
+    print('Depois do giro para direita')
+    tabuleiro.deslizar(PARA_DIREITA)
+    tabuleiro.printTabuleiro()
+    print('Depois do giro para baixo')
+    tabuleiro.deslizar(PARA_BAIXO)
+    tabuleiro.printTabuleiro()
 
