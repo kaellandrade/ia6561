@@ -359,6 +359,7 @@ def runCaia():
         # jogando como jogador A
         rodada = 1
         while True:
+            # Realizando minha jogada
             if entrada.strip() == "Quit":
                 break
             if game.getAcaoPorRodada(rodada) != 'deslizar':
@@ -404,6 +405,26 @@ def runCaia():
         # jogando como jogador B
         rodada = 2
         while True:
+            # Ler a jogada adversária
+            entrada = sys.stdin.readline()
+            if entrada.strip() == PARA_ESQUERDA:
+                tabuleiro.deslizar(PARA_ESQUERDA)
+
+            if entrada.strip() == PARA_DIREITA:
+                tabuleiro.deslizar(PARA_DIREITA)
+
+            if entrada.strip() == PARA_CIMA:
+                tabuleiro.deslizar(PARA_CIMA)
+
+            if entrada.strip() == PARA_BAIXO:
+                tabuleiro.deslizar(PARA_BAIXO)
+
+            if entrada.strip() != "Quit" and game.getAcaoPorRodada(rodada - 1) != 'deslizar':
+                coordenadaDoOponente = int(entrada.strip())
+                tabuleiro.inserirNoPorCoordenada(coordenadaDoOponente, VALOR_INICIAL_NO,
+                                                 game.getAcaoPorRodada(rodada - 1))
+
+            # Realizando minha jogada
             if entrada.strip() == "Quit":
                 break
             if game.getAcaoPorRodada(rodada) != 'deslizar':
@@ -423,24 +444,7 @@ def runCaia():
                 sys.stdout.flush()
             rodada += 2
 
-            # Prever a jogada adversária
-            entrada = sys.stdin.readline()
-            if entrada.strip() == PARA_ESQUERDA:
-                tabuleiro.deslizar(PARA_ESQUERDA)
 
-            if entrada.strip() == PARA_DIREITA:
-                tabuleiro.deslizar(PARA_DIREITA)
-
-            if entrada.strip() == PARA_CIMA:
-                tabuleiro.deslizar(PARA_CIMA)
-
-            if entrada.strip() == PARA_BAIXO:
-                tabuleiro.deslizar(PARA_BAIXO)
-
-            if entrada.strip() != "Quit" and game.getAcaoPorRodada(rodada - 1) != 'deslizar':
-                coordenadaDoOponente = int(entrada.strip())
-                tabuleiro.inserirNoPorCoordenada(coordenadaDoOponente, VALOR_INICIAL_NO,
-                                                 game.getAcaoPorRodada(rodada - 1))
 
 
 def runLocal():
