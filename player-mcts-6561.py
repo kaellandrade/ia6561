@@ -213,9 +213,22 @@ class Tabuleiro:
 
         self._isolarEspacosVazios(lista, movimento)
 
+    def _transporMatriz(self, matriz):
+        for i in range(len(matriz)):
+            for j in range(i + 1, len(matriz[0])):
+                matriz[i][j], matriz[j][i] = matriz[j][i], matriz[i][j]
+
     def _deslizarBaixo(self):
         # TODO: utilizar a lógica de transposição
-        print('deslizar para baixo')
+        """
+        Desliza o tabuleiro para baixo utilizando a lógica de transposição de matriz.
+        Deslizar uma matriz m para baixo é a mesma coisa que deslizar a sua transposta para a direita.
+        :return:
+        """
+        self._transporMatriz(self.matriz)
+        for i in range(4):
+            self._aplicarRegraLinha(self.matriz[i], PARA_DIREITA)
+        self._transporMatriz(self.matriz)  # Retornar para a matriz original
 
     def _deslizarDireita(self):
         """
@@ -233,9 +246,19 @@ class Tabuleiro:
         for i in range(self.dimensao):
             self._aplicarRegraLinha(self.matriz[i], PARA_ESQUERDA)
 
+
     def _deslizarCima(self):
         # TODO: utilizar a lógica de transposição
-        print('deslizar para cima')
+        """
+        Desliza o tabuleiro para cima utilizando a lógica de transposição de matriz.
+        Deslizar uma matriz m para cima é a mesma coisa que deslizar a sua transposta para a esquerda.
+        :return:
+        """
+        self._transporMatriz(self.matriz)
+        for i in range(4):
+            self._aplicarRegraLinha(self.matriz[i], PARA_ESQUERDA)
+        self._transporMatriz(self.matriz)                              # Retornar para a matriz original
+
 
     def deslizar(self, lado):
         self.MOVIMENTOS.get(lado)()
@@ -317,10 +340,17 @@ if __name__ == "__main__":
     tabuleiro.inserirNoPorCoordenada(32, 1, COR_AZUL)
     tabuleiro.inserirNoPorCoordenada(24, 1, COR_CINZA)
     tabuleiro.printTabuleiro()
+
     print('Depois do giro para esquerda')
     tabuleiro.deslizar(PARA_ESQUERDA)
     tabuleiro.printTabuleiro()
     print('Depois do giro para direita')
     tabuleiro.deslizar(PARA_DIREITA)
+    tabuleiro.printTabuleiro()
+    print('Depois do giro para cima')
+    tabuleiro.deslizar(PARA_CIMA)
+    tabuleiro.printTabuleiro()
+    print('Depois do giro para baixo')
+    tabuleiro.deslizar(PARA_BAIXO)
     tabuleiro.printTabuleiro()
 
