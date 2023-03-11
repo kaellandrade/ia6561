@@ -25,25 +25,6 @@ cores = {
 VALOR_INICIAL_POR_RODADA = 1
 RITMO_DO_JOGO = ['azul', 'vermelho', 'cinza', 'deslizar', 'deslizar']
 
-
-def gerarCoordenadas(n=4):
-    """
-    Função para gerar uma lista com todas as coodernadas que existem em um tabuleiro/matriz 4x4.
-    Exemplo:
-        [11, 12, 13, 14, 21, 22, 23, 24, 31, 32, 33, 34, 41, 42, 43, 44]
-    :param n:
-    :return:
-    """
-    cordenadas = []
-    for linha in range(1, n + 1):
-        for coluna in range(1, n + 1):
-            cordenadas.append(linha * 10 + coluna)
-    return cordenadas
-
-
-CORDENADAS_TABULEIRO = gerarCoordenadas(4)
-
-
 class No:
     """
     Classe que representa um No em um tabuleiro. (Vazio ou não)
@@ -361,6 +342,19 @@ class Tabuleiro:
         """
         return self.scoreAtualTabuleiro
 
+    def gerarCoordenadas(self):
+        """
+        Função para gerar uma lista com todas as coodernadas que existem no tabuleiro
+        Exemplo:
+            [11, 12, 13, 14, 21, 22, ...]
+        :return:
+        """
+        cordenadas = []
+        for linha in range(1, self.dimensao + 1):
+            for coluna in range(1, self.dimensao + 1):
+                cordenadas.append(linha * 10 + coluna)
+        return cordenadas
+
 
 
 class Game:
@@ -391,7 +385,8 @@ class Game:
         Função para escolher aleatoriamente uma posição do tabuleiro para o jogador jogar.
         :return: Int -> 11, 12, 13, 14, 21, 22, 23, 24, 31, 32, 33, 34, 41, 42, 43 ou 44
         """
-        return random.choice(CORDENADAS_TABULEIRO)
+        coordenadasDoTabuleiro = self.tabuleiro.gerarCoordenadas()
+        return random.choice(coordenadasDoTabuleiro)
 
     def calcularScoreJogo(self):
         """
@@ -517,7 +512,6 @@ def runLocal():
     game = Game(Tabuleiro())
     print('Configuração inicial')
     game.getTabuleiro().printTabuleiro()
-
     game.getTabuleiro().inserirNoPorCoordenada(43, 1, COR_AZUL)
     game.getTabuleiro().inserirNoPorCoordenada(34, 1, COR_VERMELHO)
     game.getTabuleiro().inserirNoPorCoordenada(13, 1, COR_CINZA)
