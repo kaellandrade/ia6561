@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import sys
 import random
+from itertools import chain
+from functools import reduce
 from colorama import Back, Style
 import copy
 
@@ -46,9 +48,8 @@ class No:
     """
     Classe que representa um No em um tabuleiro. (Vazio ou não)
     """
-    valor = None
+    valor = None   #TODO: refatorar isso para 0
     cor = 'branco'
-    score = 0
 
     def __init__(self, valor=None, cor='branco'):
         """
@@ -74,6 +75,11 @@ class No:
     def getValor(self):
         return self.valor
 
+    def getValor2(self):
+        if self.isNoVazio():
+            return 0
+        return self.getValor()
+
     def getCor(self):
         return self.cor
 
@@ -93,6 +99,7 @@ class Tabuleiro:
     """
     matriz = []
     dimensao = 4
+    scoreAtualTabuleiro = 0  # pontuação atual do tabuleiro: soma de todos os elementos do tabuleiro
 
     def __init__(self, dimensao=4, inicializarNos=True):
         """
@@ -147,6 +154,8 @@ class Tabuleiro:
         novoNo.score = 0
         linhaParaInserir, colunaParaInserir = self._splitCoordenada(coordenada)
         self.matriz[linhaParaInserir][colunaParaInserir] = novoNo
+        self.calcularScoreTabuleiro()
+
 
     def limparNoPorCoordenada(self, coordenada):
         """
@@ -327,9 +336,37 @@ class Tabuleiro:
         :return: Void
         """
         self.MOVIMENTOS.get(lado)()
+        self.calcularScoreTabuleiro()
+
+
+    def calcularScoreTabuleiro(self):
+        """
+        Função para calcular a pontuação atual do tabuleiro: somar o atributo valor de todos os nós atuais do tabuleiro.
+        :return:
+        """
+        listaNos = list(chain(*self.matriz))
+        self.scoreAtualTabuleiro = reduce(lambda atual, prox: atual + prox.getValor2(), listaNos, 0)
+
+
+    def getScoreTabuleiro(self):
+        """
+        Função para retornar a pontuação atual do tabuleiro.
+        :return:
+        """
+        return self.scoreAtualTabuleiro
+
 
 
 class Game:
+    scoreMaxJogo = 0  # pontuação máxima do jogo, que será dada aos jogadores.
+    tabuleiro = None
+
+    def __init__(self, tabuleiro):
+        self.tabuleiro = tabuleiro
+
+    def getTabuleiro(self):
+        return self.tabuleiro
+
     def getAcaoPorRodada(self, rodada):
         """
         Função que, através da rodada atual, descobre qual deve ser a minha jogada.
@@ -346,6 +383,23 @@ class Game:
         """
         return random.choice(CORDENADAS_TABULEIRO)
 
+    def calcularScoreJogo(self):
+        """
+        Função para atualizar a pontuação máxima durante todo o jogo. Ou seja, a maior pontuação do tabuleiro.
+        Essa pontuação representa a pontuação que será dada aos jogadores.
+        :return:
+        """
+        scoreTabuleiro = self.tabuleiro.getScoreTabuleiro()
+        if scoreTabuleiro > self.scoreMaxJogo:
+            self.scoreMaxJogo = scoreTabuleiro
+
+    def getScoreJogo(self):
+        """
+        Função para retornar a pontuação máxima do jogo.
+        :return:
+        """
+        return self.scoreMaxJogo
+
 
 def runCaia():
     """
@@ -353,8 +407,7 @@ def runCaia():
     :return:
     """
     entrada = sys.stdin.readline()
-    tabuleiro = Tabuleiro()
-    game = Game()
+    game = Game(Tabuleiro())
     if entrada.strip() == "A":
         # jogando como jogador A
         rodada = 1
@@ -364,20 +417,20 @@ def runCaia():
                 break
             if game.getAcaoPorRodada(rodada) != 'deslizar':
                 coordenada = game.getCordenadaAleatoria()
-                while not tabuleiro.hasPosicaoVazio(coordenada):
+                while not game.getTabuleiro().hasPosicaoVazio(coordenada):
                     coordenada = game.getCordenadaAleatoria()
-                tabuleiro.inserirNoPorCoordenada(coordenada, VALOR_INICIAL_NO, game.getAcaoPorRodada(rodada))
+                game.getTabuleiro().inserirNoPorCoordenada(coordenada, VALOR_INICIAL_NO, game.getAcaoPorRodada(rodada))
                 print(coordenada)
                 sys.stdout.flush()
             else:
                 # Comando de deslize.
-                deslizesPossiveis = list(tabuleiro.MOVIMENTOS.keys())
+                deslizesPossiveis = list(game.getTabuleiro().MOVIMENTOS.keys())
                 comandoDeDeslize = random.choice(deslizesPossiveis)
 
-                while not tabuleiro.isDesLizeValido(comandoDeDeslize):
-                    comandoDeDeslize = random.choice(list(tabuleiro.MOVIMENTOS.keys()))
+                while not game.getTabuleiro().isDesLizeValido(comandoDeDeslize):
+                    comandoDeDeslize = random.choice(list(game.getTabuleiro().MOVIMENTOS.keys()))
 
-                tabuleiro.deslizar(comandoDeDeslize)
+                game.getTabuleiro().deslizar(comandoDeDeslize)
                 print(comandoDeDeslize)
                 sys.stdout.flush()
             rodada += 2
@@ -385,20 +438,20 @@ def runCaia():
             # Prever a jogada adversária
             entrada = sys.stdin.readline()
             if entrada.strip() == PARA_ESQUERDA:
-                tabuleiro.deslizar(PARA_ESQUERDA)
+                game.getTabuleiro().deslizar(PARA_ESQUERDA)
 
             if entrada.strip() == PARA_DIREITA:
-                tabuleiro.deslizar(PARA_DIREITA)
+                game.getTabuleiro().deslizar(PARA_DIREITA)
 
             if entrada.strip() == PARA_CIMA:
-                tabuleiro.deslizar(PARA_CIMA)
+                game.getTabuleiro().deslizar(PARA_CIMA)
 
             if entrada.strip() == PARA_BAIXO:
-                tabuleiro.deslizar(PARA_BAIXO)
+                game.getTabuleiro().deslizar(PARA_BAIXO)
 
             if entrada.strip() != "Quit" and game.getAcaoPorRodada(rodada - 1) != 'deslizar':
                 coordenadaDoOponente = int(entrada.strip())
-                tabuleiro.inserirNoPorCoordenada(coordenadaDoOponente, VALOR_INICIAL_NO,
+                game.getTabuleiro().inserirNoPorCoordenada(coordenadaDoOponente, VALOR_INICIAL_NO,
                                                  game.getAcaoPorRodada(rodada - 1))
 
     else:
@@ -408,20 +461,20 @@ def runCaia():
             # Ler a jogada adversária
             entrada = sys.stdin.readline()
             if entrada.strip() == PARA_ESQUERDA:
-                tabuleiro.deslizar(PARA_ESQUERDA)
+                game.getTabuleiro().deslizar(PARA_ESQUERDA)
 
             if entrada.strip() == PARA_DIREITA:
-                tabuleiro.deslizar(PARA_DIREITA)
+                game.getTabuleiro().deslizar(PARA_DIREITA)
 
             if entrada.strip() == PARA_CIMA:
-                tabuleiro.deslizar(PARA_CIMA)
+                game.getTabuleiro().deslizar(PARA_CIMA)
 
             if entrada.strip() == PARA_BAIXO:
-                tabuleiro.deslizar(PARA_BAIXO)
+                game.getTabuleiro().deslizar(PARA_BAIXO)
 
             if entrada.strip() != "Quit" and game.getAcaoPorRodada(rodada - 1) != 'deslizar':
                 coordenadaDoOponente = int(entrada.strip())
-                tabuleiro.inserirNoPorCoordenada(coordenadaDoOponente, VALOR_INICIAL_NO,
+                game.getTabuleiro().inserirNoPorCoordenada(coordenadaDoOponente, VALOR_INICIAL_NO,
                                                  game.getAcaoPorRodada(rodada - 1))
 
             # Realizando minha jogada
@@ -429,17 +482,17 @@ def runCaia():
                 break
             if game.getAcaoPorRodada(rodada) != 'deslizar':
                 coordenada = game.getCordenadaAleatoria()
-                while not tabuleiro.hasPosicaoVazio(coordenada):
+                while not game.getTabuleiro().hasPosicaoVazio(coordenada):
                     coordenada = game.getCordenadaAleatoria()
-                tabuleiro.inserirNoPorCoordenada(coordenada, VALOR_INICIAL_NO, game.getAcaoPorRodada(rodada))
+                game.getTabuleiro().inserirNoPorCoordenada(coordenada, VALOR_INICIAL_NO, game.getAcaoPorRodada(rodada))
                 print(coordenada)
                 sys.stdout.flush()
             else:
-                comandoDeDeslize = random.choice(list(tabuleiro.MOVIMENTOS.keys()))
-                while not tabuleiro.isDesLizeValido(comandoDeDeslize):
-                    comandoDeDeslize = random.choice(list(tabuleiro.MOVIMENTOS.keys()))
+                comandoDeDeslize = random.choice(list(game.getTabuleiro().MOVIMENTOS.keys()))
+                while not game.getTabuleiro().isDesLizeValido(comandoDeDeslize):
+                    comandoDeDeslize = random.choice(list(game.getTabuleiro().MOVIMENTOS.keys()))
 
-                tabuleiro.deslizar(comandoDeDeslize)
+                game.getTabuleiro().deslizar(comandoDeDeslize)
                 print(comandoDeDeslize)
                 sys.stdout.flush()
             rodada += 2
@@ -452,53 +505,71 @@ def runLocal():
     Função para realizar testes no algoritmo independente do caia
     :return:
     """
-    tabuleiro = Tabuleiro()
+    game = Game(Tabuleiro())
     print('Configuração inicial')
-    tabuleiro.printTabuleiro()
-    tabuleiro.inserirNoPorCoordenada(43, 1, COR_AZUL)
-    tabuleiro.inserirNoPorCoordenada(34, 1, COR_VERMELHO)
-    tabuleiro.inserirNoPorCoordenada(13, 1, COR_CINZA)
+    game.getTabuleiro().printTabuleiro()
+    game.getTabuleiro().inserirNoPorCoordenada(43, 1, COR_AZUL)
+    game.getTabuleiro().inserirNoPorCoordenada(34, 1, COR_VERMELHO)
+    game.getTabuleiro().inserirNoPorCoordenada(13, 1, COR_CINZA)
 
-    tabuleiro.inserirNoPorCoordenada(21, 3, COR_VERMELHO)
-    tabuleiro.inserirNoPorCoordenada(22, 1, COR_AZUL)
-    tabuleiro.inserirNoPorCoordenada(23, 9, COR_AZUL)
-    tabuleiro.inserirNoPorCoordenada(24, 3, COR_CINZA)
+    game.getTabuleiro().inserirNoPorCoordenada(21, 3, COR_VERMELHO)
+    game.getTabuleiro().inserirNoPorCoordenada(22, 1, COR_AZUL)
+    game.getTabuleiro().inserirNoPorCoordenada(23, 9, COR_AZUL)
+    game.getTabuleiro().inserirNoPorCoordenada(24, 3, COR_CINZA)
 
-    tabuleiro.inserirNoPorCoordenada(31, 3, COR_VERMELHO)
-    tabuleiro.inserirNoPorCoordenada(32, 1, COR_AZUL)
-    tabuleiro.inserirNoPorCoordenada(34, 1, COR_CINZA)
+    game.getTabuleiro().inserirNoPorCoordenada(31, 3, COR_VERMELHO)
+    game.getTabuleiro().inserirNoPorCoordenada(32, 1, COR_AZUL)
+    game.getTabuleiro().inserirNoPorCoordenada(34, 1, COR_CINZA)
 
-    tabuleiro.inserirNoPorCoordenada(41, 3, COR_AZUL)
-    tabuleiro.inserirNoPorCoordenada(42, 1, COR_VERMELHO)
-    tabuleiro.inserirNoPorCoordenada(43, 9, COR_AZUL)
-    tabuleiro.inserirNoPorCoordenada(44, 1, COR_CINZA)
+    print('Tabuleiro criado')
+    game.getTabuleiro().printTabuleiro()
+
+    print('Pontuacao do game.getTabuleiro(): ', game.getTabuleiro().getScoreTabuleiro())
+    game.calcularScoreJogo()
 
     print('Giro para direita')
-    tabuleiro.deslizar(PARA_DIREITA)
-    tabuleiro.printTabuleiro()
+    game.getTabuleiro().deslizar(PARA_DIREITA)
+    game.getTabuleiro().printTabuleiro()
+
+    game.getTabuleiro().calcularScoreTabuleiro()
+    print('Pontuacao do game.getTabuleiro(): ', game.getTabuleiro().getScoreTabuleiro())
+    game.calcularScoreJogo()
 
     print('Giro para cima')
-    tabuleiro.deslizar(PARA_CIMA)
-    tabuleiro.printTabuleiro()
+    game.getTabuleiro().deslizar(PARA_CIMA)
+    game.getTabuleiro().printTabuleiro()
+
+    game.getTabuleiro().calcularScoreTabuleiro()
+    print('Pontuacao do game.getTabuleiro(): ', game.getTabuleiro().getScoreTabuleiro())
+    game.calcularScoreJogo()
 
     print('Depois do giro para esquerda')
-    tabuleiro.deslizar(PARA_ESQUERDA)
-    tabuleiro.printTabuleiro()
-    print('Depois do giro para direita')
-    tabuleiro.deslizar(PARA_DIREITA)
-    tabuleiro.printTabuleiro()
-    print('Depois do giro para cima')
-    tabuleiro.deslizar(PARA_CIMA)
-    tabuleiro.printTabuleiro()
+    game.getTabuleiro().deslizar(PARA_ESQUERDA)
+    game.getTabuleiro().printTabuleiro()
+
+    game.getTabuleiro().calcularScoreTabuleiro()
+    print('Pontuacao do game.getTabuleiro(): ', game.getTabuleiro().getScoreTabuleiro())
+    game.calcularScoreJogo()
 
     print('Depois do giro para direita')
-    tabuleiro.deslizar(PARA_DIREITA)
-    tabuleiro.printTabuleiro()
+    game.getTabuleiro().deslizar(PARA_DIREITA)
+    game.getTabuleiro().printTabuleiro()
+
+    game.getTabuleiro().calcularScoreTabuleiro()
+    print('Pontuacao do game.getTabuleiro(): ', game.getTabuleiro().getScoreTabuleiro())
+    game.calcularScoreJogo()
+
     print('Depois do giro para baixo')
-    tabuleiro.deslizar(PARA_BAIXO)
-    tabuleiro.printTabuleiro()
+    game.getTabuleiro().deslizar(PARA_BAIXO)
+    game.getTabuleiro().printTabuleiro()
+
+    game.getTabuleiro().calcularScoreTabuleiro()
+    print('Pontuacao do game.getTabuleiro(): ', game.getTabuleiro().getScoreTabuleiro())
+    game.calcularScoreJogo()
+
+    print('Pontuacao máxima: ', game.getScoreJogo())
 
 
 if __name__ == "__main__":
-    runCaia()
+    # runCaia()
     runLocal()

@@ -1,3 +1,7 @@
+
+
+import numpy as np
+
 def retiraEspacosVazios(lista, movimento):
     match movimento:
         case 'L': ## De baixo para cima
@@ -72,7 +76,9 @@ matriz = [[1, 1, 1, 1],
           [3, 1, 0, 1],
           [1, 1, 9, 1]]
 
-deslizarMatriz(matriz, 'L')
+# deslizarMatriz(matriz, 'L')
+
+
 
 
 
