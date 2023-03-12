@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
+import math
 import sys
+import copy
 import random
 from itertools import chain
 from functools import reduce
 from colorama import Back, Style
-import copy
-
+from math import sqrt
 COR_VERMELHO = 'vermelho'
 COR_AZUL = 'azul'
 COR_CINZA = 'cinza'
@@ -24,6 +25,9 @@ cores = {
 }
 VALOR_INICIAL_POR_RODADA = 1
 RITMO_DO_JOGO = ['azul', 'vermelho', 'cinza', 'deslizar', 'deslizar']
+MOVIMENTOS_DESLIZES = [PARA_DIREITA, PARA_ESQUERDA, PARA_BAIXO, PARA_CIMA]
+C = 1/sqrt(2) #Contante do Exploration
+DELTA_VITORIA = 6561 #Definição da vitoria
 
 class No:
     """
@@ -79,7 +83,6 @@ class No:
         Verifica se um dado Nó possui a mesma configuração que o nó atual.
         """
         return self.getCor() == no2.getCor() and self.getValor() == no2.getValor()
-
 
 class Tabuleiro:
     """
@@ -162,6 +165,16 @@ class Tabuleiro:
         linhaParaInserir = (coordenada // 10) - 1  # divide por 10 pra pegar a dezena
         colunaParaInserir = (coordenada % 10) - 1  # obtém o resto da divisão por 10 para pegar a unidade
         return linhaParaInserir, colunaParaInserir
+
+    def getCoordenadasVazias(self):
+        coordenadasVazias = []
+        for i in range(self.dimensao):
+            for j in range(self.dimensao):
+                if self.matriz[i][j].isNoVazio():
+                    coordenada = int(str(i+1) + str(j+1)) # Todo usar _splitCoordenada depois
+                    coordenadasVazias.append(coordenada)
+        return coordenadasVazias
+
 
     def hasPosicaoVazio(self, coordenada):
         """
@@ -352,8 +365,6 @@ class Tabuleiro:
                 cordenadas.append(linha * 10 + coluna)
         return cordenadas
 
-
-
 class Game:
     scoreMaxJogo = 0  # pontuação máxima do jogo, que será dada aos jogadores.
     tabuleiro = None
@@ -409,20 +420,33 @@ class Game:
         :return:
         """
 
-
-
-class Estado_Arvore:
+class NoArvoreMCTS:
     #TODO
     """
     Classe para representar um estado na árvore Monte Carlo.
     Aqui, cada nó da árvore representa um estado do tabuleiro, ou seja, a configurança dele.
     """
-    def __init__(self, tabuleiro, estado_pai=None):
+    def __init__(self, tabuleiro, pai=None):
         self.tabuleiro = tabuleiro
-        self.estado_pai = estado_pai
-        self.estados_filho = []
+        self.pai = pai
+        self.estadosFilho = []
         self.qtdDeVisitas = 0
-        self.score = 0
+        self.qtdDeVitorias = 0
+
+
+class MCTS:
+    noInicial = None
+
+    def __init__(self, arvore):
+        """
+        Inicia a arvore Monte-Carlo
+        """
+        self.noInicial = arvore
+
+
+    def buscaUCT(self):
+
+
 
 
     def isGameOver(self):
@@ -434,6 +458,49 @@ class Estado_Arvore:
         façam alguma alteração no tabuleiro.
         :return:
         """
+
+    def retroPropagar(self, no):
+        """
+        Realiza a retropropagação MCTS
+        """
+        while no.pai is not None:
+            no.qtdDeVisitas = no.qtdDeVisitas + 1
+            if no.tabuleiro.checarVitoria(): # TODO: Criar essa função
+                no.qtdDeVitorias = no.qtdDeVitorias + 1
+            no = no.pai
+
+    def simular(self, no):
+        """
+        Joga aleatoriamente. Default Policy
+        """
+        while len(no.estadosFilho): #Todo: Implementar
+            acao = RITMO_DO_JOGO #Todo: Implementar
+            if acao['deslizar']:
+                deslize = random.choice(MOVIMENTOS_DESLIZES)
+                no.tabuleiro.deslizar(deslize)
+            else:
+                coordenadaAleatoria = random.choice(no.tabuleiro.getCoordenadasVazias())
+                no.tabuleiro.inserirNoPorCoordenada(coordenadaAleatoria, VALOR_INICIAL_POR_RODADA, acao)
+        return no.tabuleiro.getScoreTabuleiro()
+
+    def getMelhorFilho(self, no):
+        """
+        Retorna o melhor filho.
+        """
+        maiorvalor = 0
+        melhorFilho = None
+        for filho in no.estadosFilho:
+            politica = (filho.qtdDeVitorias / filho.qtdDeVisitas) + C*sqrt(2*math.log(no.qtdDeVisitas)/filho.qtdDeVisitas)
+            if politica > maiorvalor:
+                maiorvalor = politica
+                melhorFilho = filho
+        return melhorFilho
+
+    def expandirNo(self, no):
+        pass
+
+
+
 
 def runCaia():
     """
@@ -531,78 +598,78 @@ def runCaia():
                 sys.stdout.flush()
             rodada += 2
 
-
 def runLocal():
     """
     Função para realizar testes no algoritmo independente do caia
     :return:
     """
-    game = Game(Tabuleiro())
-    print('Configuração inicial')
-    game.getTabuleiro().printTabuleiro()
-    game.getTabuleiro().inserirNoPorCoordenada(43, 1, COR_AZUL)
-    game.getTabuleiro().inserirNoPorCoordenada(34, 1, COR_VERMELHO)
-    game.getTabuleiro().inserirNoPorCoordenada(13, 1, COR_CINZA)
+    # game = Game(Tabuleiro())
+    # print('Configuração inicial')
+    # game.getTabuleiro().printTabuleiro()
+    # print(game.getTabuleiro().getCoordenadasVazias())
+    # game.getTabuleiro().inserirNoPorCoordenada(43, 1, COR_AZUL)
+    # game.getTabuleiro().inserirNoPorCoordenada(34, 1, COR_VERMELHO)
+    # game.getTabuleiro().inserirNoPorCoordenada(13, 1, COR_CINZA)
+    #
+    # game.getTabuleiro().inserirNoPorCoordenada(21, 3, COR_VERMELHO)
+    # game.getTabuleiro().inserirNoPorCoordenada(22, 1, COR_AZUL)
+    # game.getTabuleiro().inserirNoPorCoordenada(23, 9, COR_AZUL)
+    # game.getTabuleiro().inserirNoPorCoordenada(24, 3, COR_CINZA)
+    #
+    # game.getTabuleiro().inserirNoPorCoordenada(31, 3, COR_VERMELHO)
+    # game.getTabuleiro().inserirNoPorCoordenada(32, 1, COR_AZUL)
+    # game.getTabuleiro().inserirNoPorCoordenada(34, 1, COR_CINZA)
+    # game.getTabuleiro().printTabuleiro()
 
-    game.getTabuleiro().inserirNoPorCoordenada(21, 3, COR_VERMELHO)
-    game.getTabuleiro().inserirNoPorCoordenada(22, 1, COR_AZUL)
-    game.getTabuleiro().inserirNoPorCoordenada(23, 9, COR_AZUL)
-    game.getTabuleiro().inserirNoPorCoordenada(24, 3, COR_CINZA)
-
-    game.getTabuleiro().inserirNoPorCoordenada(31, 3, COR_VERMELHO)
-    game.getTabuleiro().inserirNoPorCoordenada(32, 1, COR_AZUL)
-    game.getTabuleiro().inserirNoPorCoordenada(34, 1, COR_CINZA)
-
-    print('Tabuleiro criado')
-    game.getTabuleiro().printTabuleiro()
-
-    print('Pontuacao do game.getTabuleiro(): ', game.getTabuleiro().getScoreTabuleiro())
-    game.calcularScoreJogo()
-
-    melhor_movimento = game.decidirMovimento()
-
-    print('Giro para direita')
-    game.getTabuleiro().deslizar(PARA_DIREITA)
-    game.getTabuleiro().printTabuleiro()
-
-    game.getTabuleiro().calcularScoreTabuleiro()
-    print('Pontuacao do game.getTabuleiro(): ', game.getTabuleiro().getScoreTabuleiro())
-    game.calcularScoreJogo()
-
-    print('Giro para cima')
-    game.getTabuleiro().deslizar(PARA_CIMA)
-    game.getTabuleiro().printTabuleiro()
-
-    game.getTabuleiro().calcularScoreTabuleiro()
-    print('Pontuacao do game.getTabuleiro(): ', game.getTabuleiro().getScoreTabuleiro())
-    game.calcularScoreJogo()
-
-    print('Depois do giro para esquerda')
-    game.getTabuleiro().deslizar(PARA_ESQUERDA)
-    game.getTabuleiro().printTabuleiro()
-
-    game.getTabuleiro().calcularScoreTabuleiro()
-    print('Pontuacao do game.getTabuleiro(): ', game.getTabuleiro().getScoreTabuleiro())
-    game.calcularScoreJogo()
-
-    print('Depois do giro para direita')
-    game.getTabuleiro().deslizar(PARA_DIREITA)
-    game.getTabuleiro().printTabuleiro()
-
-    game.getTabuleiro().calcularScoreTabuleiro()
-    print('Pontuacao do game.getTabuleiro(): ', game.getTabuleiro().getScoreTabuleiro())
-    game.calcularScoreJogo()
-
-    print('Depois do giro para baixo')
-    game.getTabuleiro().deslizar(PARA_BAIXO)
-    game.getTabuleiro().printTabuleiro()
-
-    game.getTabuleiro().calcularScoreTabuleiro()
-    print('Pontuacao do game.getTabuleiro(): ', game.getTabuleiro().getScoreTabuleiro())
-    game.calcularScoreJogo()
-
-    print('Pontuacao máxima: ', game.getScoreJogo())
-
+    # print('Tabuleiro criado')
+    # game.getTabuleiro().printTabuleiro()
+    #
+    # print('Pontuacao do game.getTabuleiro(): ', game.getTabuleiro().getScoreTabuleiro())
+    # game.calcularScoreJogo()
+    #
+    # melhor_movimento = game.decidirMovimento()
+    #
+    # print('Giro para direita')
+    # game.getTabuleiro().deslizar(PARA_DIREITA)
+    # game.getTabuleiro().printTabuleiro()
+    #
+    # game.getTabuleiro().calcularScoreTabuleiro()
+    # print('Pontuacao do game.getTabuleiro(): ', game.getTabuleiro().getScoreTabuleiro())
+    # game.calcularScoreJogo()
+    #
+    # print('Giro para cima')
+    # game.getTabuleiro().deslizar(PARA_CIMA)
+    # game.getTabuleiro().printTabuleiro()
+    #
+    # game.getTabuleiro().calcularScoreTabuleiro()
+    # print('Pontuacao do game.getTabuleiro(): ', game.getTabuleiro().getScoreTabuleiro())
+    # game.calcularScoreJogo()
+    #
+    # print('Depois do giro para esquerda')
+    # game.getTabuleiro().deslizar(PARA_ESQUERDA)
+    # game.getTabuleiro().printTabuleiro()
+    #
+    # game.getTabuleiro().calcularScoreTabuleiro()
+    # print('Pontuacao do game.getTabuleiro(): ', game.getTabuleiro().getScoreTabuleiro())
+    # game.calcularScoreJogo()
+    #
+    # print('Depois do giro para direita')
+    # game.getTabuleiro().deslizar(PARA_DIREITA)
+    # game.getTabuleiro().printTabuleiro()
+    #
+    # game.getTabuleiro().calcularScoreTabuleiro()
+    # print('Pontuacao do game.getTabuleiro(): ', game.getTabuleiro().getScoreTabuleiro())
+    # game.calcularScoreJogo()
+    #
+    # print('Depois do giro para baixo')
+    # game.getTabuleiro().deslizar(PARA_BAIXO)
+    # game.getTabuleiro().printTabuleiro()
+    #
+    # game.getTabuleiro().calcularScoreTabuleiro()
+    # print('Pontuacao do game.getTabuleiro(): ', game.getTabuleiro().getScoreTabuleiro())
+    # game.calcularScoreJogo()
+    #
+    # print('Pontuacao máxima: ', game.getScoreJogo())
 
 if __name__ == "__main__":
     # runCaia()
