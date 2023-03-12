@@ -144,7 +144,6 @@ class Tabuleiro:
         self.matriz[linhaParaInserir][colunaParaInserir] = novoNo
         self.calcularScoreTabuleiro()
 
-
     def limparNoPorCoordenada(self, coordenada):
         """
         Recebe uma coordenada no formato xx e torna seu nó vazio.
@@ -325,7 +324,6 @@ class Tabuleiro:
         self.MOVIMENTOS.get(lado)()
         self.calcularScoreTabuleiro()
 
-
     def calcularScoreTabuleiro(self):
         """
         Função para calcular a pontuação atual do tabuleiro: somar o atributo valor de todos os nós do tabuleiro.
@@ -333,7 +331,6 @@ class Tabuleiro:
         """
         listaNos = list(chain(*self.matriz))
         self.scoreAtualTabuleiro = reduce(lambda atual, prox: atual + prox.getValor(), listaNos, 0)
-
 
     def getScoreTabuleiro(self):
         """
@@ -406,6 +403,37 @@ class Game:
         """
         return self.scoreMaxJogo
 
+    def decidirMovimento(self):
+        """
+        Função para iniciar o algoritmo do MCTS
+        :return:
+        """
+
+
+
+class Estado_Arvore:
+    #TODO
+    """
+    Classe para representar um estado na árvore Monte Carlo.
+    Aqui, cada nó da árvore representa um estado do tabuleiro, ou seja, a configurança dele.
+    """
+    def __init__(self, tabuleiro, estado_pai=None):
+        self.tabuleiro = tabuleiro
+        self.estado_pai = estado_pai
+        self.estados_filho = []
+        self.qtdDeVisitas = 0
+        self.score = 0
+
+
+    def isGameOver(self):
+        #TODO
+        """
+        Função para verificar se o jogo chegou ao fim.
+        Condições para isso: atingir o número de 1000 rodadas jogadas ou chegar em um estado que o tabuleiro esteja
+        cheio, de modo que não seja possível nem acrescentar nenhuma peça e nem realizar movimentos de deslizes que
+        façam alguma alteração no tabuleiro.
+        :return:
+        """
 
 def runCaia():
     """
@@ -530,6 +558,8 @@ def runLocal():
 
     print('Pontuacao do game.getTabuleiro(): ', game.getTabuleiro().getScoreTabuleiro())
     game.calcularScoreJogo()
+
+    melhor_movimento = game.decidirMovimento()
 
     print('Giro para direita')
     game.getTabuleiro().deslizar(PARA_DIREITA)
