@@ -29,10 +29,13 @@ cores = {
 VALOR_INICIAL_POR_RODADA = 1
 RITMO_DO_JOGO = ['azul', 'vermelho', 'cinza', 'deslizar', 'deslizar']
 MOVIMENTOS_DESLIZES = [PARA_DIREITA, PARA_ESQUERDA, PARA_BAIXO, PARA_CIMA]
-C = 1/sqrt(2) #Contante do Exploration
-DELTA_VITORIA = 100 #Definição da vitoria
-MAX_DEPTH = 10
-QTD_SIMULACOES = 200
+
+C = 1/sqrt(2)  # Contante do Exploration
+DELTA_VITORIA = 100  # Definição da vitoria (representa um score mínimo pré-determinado para compreender uma vitória)
+MAX_DEPTH = 10  # Profundidade máxima que as simulações Monte Carlo irão alcançar
+QTD_SIMULACOES = 200  # Quantidade de simulações Monte Carlo que serão feitas
+
+
 class No:
     """
     Classe que representa um No em um tabuleiro. (Vazio ou não)
@@ -87,6 +90,7 @@ class No:
         Verifica se um dado Nó possui a mesma configuração que o nó atual.
         """
         return self.getCor() == no2.getCor() and self.getValor() == no2.getValor()
+
 
 class Tabuleiro:
     """
@@ -374,6 +378,7 @@ class Tabuleiro:
                 cordenadas.append(linha * 10 + coluna)
         return cordenadas
 
+
 class Game:
     scoreMaxJogo = 0  # pontuação máxima do jogo, que será dada aos jogadores.
     tabuleiro = None
@@ -430,15 +435,8 @@ class Game:
     def getScoreJogo(self):
         """
         Função para retornar a pontuação máxima do jogo.
-        :return: Int
         """
         return self.scoreMaxJogo
-
-    def decidirMovimento(self):
-        """
-        Função para iniciar o algoritmo do MCTS
-        :return:
-        """
 
     def verificarFimDeJogo(self):
         """
@@ -448,7 +446,6 @@ class Game:
         proximaRodada = self.getRodada() + 1
         if len(self.tabuleiro.getCoordenadasVazias()) and self.getAcaoPorRodada(proximaRodada) != 'deslizar': # Tem casas vazias.
             return False
-
         else:
             tabuleiroCopia = Tabuleiro(dimensao, False)
             copiaMatriz = self.getTabuleiro().getCopiaDaMatriz()
@@ -469,10 +466,7 @@ class Game:
 
     def get_legal_actions(self):
         """
-        Modify according to your game or
-        needs. Constructs a list of all
-        possible actions from current state.
-        Returns a list.
+        Função para retornar uma lista de todas as ações possíveis de realizar dado um estado do tabuleiro.
         """
         acao = self.getAcaoPorRodada()
         if acao != 'deslizar':
@@ -486,34 +480,21 @@ class Game:
         """
         return self.verificarFimDeJogo()
 
-
     def game_result(self):
-
         """
-        Modify according to your game or
-        needs. Returns 1 or 0 or -1 depending
-        on your state corresponding to win,
-        tie or a loss.
+        Função que retorna 1 se meu estado terminal foi uma vitória ou -1 se foi uma derrota.
+        Aqui foi definido que uma vitória é atingir um scoreTabuleiro no mínimo igual a DELTA_VITORIA.
         """
         # print(self.getTabuleiro().printTabuleiro())
-        print('Score atingido', self.getTabuleiro().getScoreTabuleiro())
+        # print('Score atingido', self.getTabuleiro().getScoreTabuleiro())
         if self.getTabuleiro().getScoreTabuleiro() >= DELTA_VITORIA:
             return 1
         return -1
 
     def move(self, action):
         """
-        Modify according to your game or
-        needs. Changes the state of your
-        board with a new value. For a normal
-        Tic Tac Toe game, it can be a 3 by 3
-        array with all the elements of array
-        being 0 initially. 0 means the board
-        position is empty. If you place x in
-        row 2 column 3, then it would be some
-        thing like board[2][3] = 1, where 1
-        represents that x is placed. Returns
-        the new state after making a move.
+        Função para realizar um movimento de jogo, seja adicionar uma peça ou deslizar o tabuleiro. A função retorna
+        o novo estado gerado a partir dessa ação.
         """
         tabuleiroAtual = self.getTabuleiro()
 
@@ -535,12 +516,10 @@ class Game:
         return newState
 
 
-
 class MonteCarloTreeSearchNode:
     """
-    Representa a parvore Monte Carlo
+    Representa a arvore Monte Carlo
     """
-
     def __init__(self, state, parent=None, parent_action=None):
         """
         Inicia os atributos da arvore.
@@ -558,7 +537,7 @@ class MonteCarloTreeSearchNode:
 
     def untried_actions(self):
         """
-        Retorna a lsita de ações não experimentadas de um determiando estado.
+        Retorna a lista de ações não experimentadas de um determinado estado.
         """
         self._untried_actions = self.state.get_legal_actions()
         return self._untried_actions
@@ -592,13 +571,13 @@ class MonteCarloTreeSearchNode:
 
     def is_terminal_node(self):
         """
-        Veririfica se é um nó terminal. Fim de jogo.
+        Veririfica se é um nó terminal, ou seja, fim de jogo.
         """
         return self.state.is_game_over()
 
     def rollout(self):
         """
-        Simulação Monte Carlo
+        Função para a etapa de simulação Monte Carlo
         """
         current_rollout_state = self.state
         depth = 0
@@ -616,10 +595,10 @@ class MonteCarloTreeSearchNode:
 
     def backpropagate(self, result):
         """
-        Atualiza as estatísticas do No.
+        Função para a etapa de backpropagation Monte Carlo. Atualiza as estatísticas do No.
         """
-        self._number_of_visits += 1. #Incrementa visitas
-        self._results[result] += 1. #INcrementa a vitória ou a derrota.
+        self._number_of_visits += 1.  # Incrementa visitas
+        self._results[result] += 1.  # Incrementa a vitória ou a derrota.
         if self.parent:
             self.parent.backpropagate(result)
 
@@ -631,8 +610,8 @@ class MonteCarloTreeSearchNode:
 
     def best_child(self, c_param=C):
         """
-        Seleciona o melhor filho no array de filhos.
-        O primeiro termo da fórmula é exploitation e o segundo é o  exploration.
+        Função que seleciona o melhor filho no array de filhos.
+        O primeiro termo da fórmula é exploitation e o segundo é o exploration.
         """
         choices_weights = [(c.q() / c.n()) + c_param * np.sqrt((2 * np.log(self.n()) / c.n())) for c in
                            self.children]
@@ -640,13 +619,13 @@ class MonteCarloTreeSearchNode:
 
     def rollout_policy(self, possible_moves):
         """
-        Seleciona aleatoriamente um movimento.
+        Função que define a política aleatória para a etapa de simulação. Seleciona aleatoriamente um movimento.
         """
         return possible_moves[np.random.randint(len(possible_moves))]
 
     def _tree_policy(self):
         """
-        Seleciona o no para executar o rollout.
+        Função que seleciona o no para executar o rollout, seguindo a política definida (UCT).
         """
         current_node = self
         while not current_node.is_terminal_node():
@@ -659,7 +638,7 @@ class MonteCarloTreeSearchNode:
 
     def best_action(self):
         """
-        Excução do algoritmo TODO: Refatorar para best_action UCTSearch
+        Função para iniciar a execução do algoritmo MCTS TODO: Refatorar para best_action UCTSearch
         """
         simulation_no = QTD_SIMULACOES
 
@@ -667,11 +646,8 @@ class MonteCarloTreeSearchNode:
             v = self._tree_policy()
             reward = v.rollout()
             v.backpropagate(reward)
-            print('Simulação n°', i)
-        return self.best_child(c_param=0.)
-
-
-
+            # print('Simulação n°', i)
+        return self.best_child()
 
 
 def runCaia():
@@ -770,29 +746,41 @@ def runCaia():
                 sys.stdout.flush()
             rodada += 2
 
+
 def runLocal():
     """
     Função para realizar testes no algoritmo independente do caia
     :return:
     """
     game = Game(Tabuleiro())
+
+    # game.getTabuleiro().inserirNoPorCoordenada(21, 3, COR_AZUL)
+    # game.getTabuleiro().inserirNoPorCoordenada(22, 20, COR_VERMELHO)
+    # game.getTabuleiro().inserirNoPorCoordenada(32, 1, COR_CINZA)
+    #
+    # game.getTabuleiro().inserirNoPorCoordenada(11, 20, COR_AZUL)
+    # game.getTabuleiro().inserirNoPorCoordenada(23, 20, COR_VERMELHO)
+    # game.getTabuleiro().inserirNoPorCoordenada(44, 20, COR_CINZA)
+
     print('Configuração inicial')
-    game.getTabuleiro().inserirNoPorCoordenada(21, 3, COR_AZUL)
-    game.getTabuleiro().inserirNoPorCoordenada(22, 20, COR_VERMELHO)
-    game.getTabuleiro().inserirNoPorCoordenada(32, 1, COR_CINZA)
-
-    game.getTabuleiro().inserirNoPorCoordenada(11, 20, COR_AZUL)
-    game.getTabuleiro().inserirNoPorCoordenada(23, 20, COR_VERMELHO)
-    game.getTabuleiro().inserirNoPorCoordenada(44, 20, COR_CINZA)
-
-
-    game.setRodada(10)
     game.getTabuleiro().printTabuleiro()
-    print('Rodando monte Carlo Expanções')
-    root = MonteCarloTreeSearchNode(game)
-    selected_node = root.best_action()
-    print(selected_node.parent_action)
-    print(selected_node.state.getTabuleiro().printTabuleiro())
+
+    game.setRodada(1)
+    for i in range(100):
+        print('Rodada ', game.getRodada())
+        print('Rodando monte Carlo Expanções')
+        root = MonteCarloTreeSearchNode(game)
+        selected_node = root.best_action()
+        print(selected_node.parent_action)
+        print('Tabuleiro consequencia do monte carlo:')
+        print(selected_node.state.getTabuleiro().printTabuleiro())
+        game.setTabuleiro(selected_node.state.getTabuleiro())
+        print('Score tabuleiro: ', game.getTabuleiro().getScoreTabuleiro())
+        game.calcularScoreJogo()
+        game.setRodada(game.getRodada() + 1)
+
+    print('Score jogo: ', game.getScoreJogo())
+
 
 if __name__ == "__main__":
     # runCaia()
