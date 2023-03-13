@@ -31,7 +31,7 @@ RITMO_DO_JOGO = ['azul', 'vermelho', 'cinza', 'deslizar', 'deslizar']
 MOVIMENTOS_DESLIZES = [PARA_DIREITA, PARA_ESQUERDA, PARA_BAIXO, PARA_CIMA]
 C = 1/sqrt(2) #Contante do Exploration
 DELTA_VITORIA = 100 #Definição da vitoria
-MAX_DEPTH = 2000
+MAX_DEPTH = 10
 QTD_SIMULACOES = 200
 class No:
     """
@@ -606,7 +606,8 @@ class MonteCarloTreeSearchNode:
             self.state.setRodada(self.state.getRodada() + 1)
             current_rollout_state.setRodada(self.state.getRodada() + 1)
             possible_moves = current_rollout_state.get_legal_actions()
-
+            if len(possible_moves) == 0:
+                break
             action = self.rollout_policy(possible_moves)
             current_rollout_state = current_rollout_state.move(action)
             depth += 1
@@ -777,16 +778,21 @@ def runLocal():
     game = Game(Tabuleiro())
     print('Configuração inicial')
     game.getTabuleiro().inserirNoPorCoordenada(21, 3, COR_AZUL)
-    game.getTabuleiro().inserirNoPorCoordenada(22, 3, COR_VERMELHO)
+    game.getTabuleiro().inserirNoPorCoordenada(22, 20, COR_VERMELHO)
     game.getTabuleiro().inserirNoPorCoordenada(32, 1, COR_CINZA)
 
+    game.getTabuleiro().inserirNoPorCoordenada(11, 20, COR_AZUL)
+    game.getTabuleiro().inserirNoPorCoordenada(23, 20, COR_VERMELHO)
+    game.getTabuleiro().inserirNoPorCoordenada(44, 20, COR_CINZA)
 
-    game.setRodada(4)
+
+    game.setRodada(10)
     game.getTabuleiro().printTabuleiro()
     print('Rodando monte Carlo Expanções')
     root = MonteCarloTreeSearchNode(game)
     selected_node = root.best_action()
     print(selected_node.parent_action)
+    print(selected_node.state.getTabuleiro().printTabuleiro())
 
 if __name__ == "__main__":
     # runCaia()
