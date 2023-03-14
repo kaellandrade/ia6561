@@ -31,9 +31,9 @@ RITMO_DO_JOGO = ['azul', 'vermelho', 'cinza', 'deslizar', 'deslizar']
 MOVIMENTOS_DESLIZES = [PARA_DIREITA, PARA_ESQUERDA, PARA_BAIXO, PARA_CIMA]
 
 C = 1/sqrt(2)  # Contante do Exploration
-DELTA_VITORIA = 100  # Definição da vitoria (representa um score mínimo pré-determinado para compreender uma vitória)
-MAX_DEPTH = 10  # Profundidade máxima que as simulações Monte Carlo irão alcançar
-QTD_SIMULACOES = 200  # Quantidade de simulações Monte Carlo que serão feitas
+DELTA_VITORIA = 6561  # Definição da vitoria (representa um score mínimo pré-determinado para compreender uma vitória)
+MAX_DEPTH = 20  # Profundidade máxima que as simulações Monte Carlo irão alcançar
+QTD_SIMULACOES = 100  # Quantidade de simulações Monte Carlo que serão feitas
 
 
 class No:
@@ -440,26 +440,25 @@ class Game:
 
     def verificarFimDeJogo(self):
         """
-        Verifica o fim do jogo. TODO: Otimizar função para verificar pares de iguais.
+        Verifica o fim do jogo.
         """
-        dimensao = self.getTabuleiro().dimensao
-        proximaRodada = self.getRodada() + 1
-        if len(self.tabuleiro.getCoordenadasVazias()) and self.getAcaoPorRodada(proximaRodada) != 'deslizar': # Tem casas vazias.
-            return False
-        else:
-            tabuleiroCopia = Tabuleiro(dimensao, False)
-            copiaMatriz = self.getTabuleiro().getCopiaDaMatriz()
-            tabuleiroCopia.setMatrizNos(copiaMatriz)
-            mnQuantidade = dimensao*dimensao
-            for deslize in MOVIMENTOS_DESLIZES:
-                tabuleiroCopia.deslizar(deslize)
-                qtdCoordenadasVazias = len(tabuleiroCopia.getCoordenadasVazias())
-                if qtdCoordenadasVazias < mnQuantidade:
-                    return False
-                if qtdCoordenadasVazias == mnQuantidade and self.getAcaoPorRodada(proximaRodada) == 'deslizar':
-                    return True
+        acaoAtualNaRodada = self.getAcaoPorRodada()
+        proximaAcao = self.getAcaoPorRodada(self.getRodada()+1)
 
-        return True
+        dimensao = self.getTabuleiro().dimensao
+        tabuleiroCopia = Tabuleiro(dimensao, False)
+        copiaMatriz = self.getTabuleiro().getCopiaDaMatriz()
+        tabuleiroCopia.setMatrizNos(copiaMatriz)
+
+        qtdCoordenadasVazias = len(tabuleiroCopia.getCoordenadasVazias())
+
+        if qtdCoordenadasVazias == 0 and acaoAtualNaRodada != 'deslizar':
+            return True
+
+        if qtdCoordenadasVazias == 16 and proximaAcao == 'deslizar' and acaoAtualNaRodada == 'deslizar':
+            return True
+
+        return False
 
     def setTabuleiro(self, tabuleiro):
         self.tabuleiro = tabuleiro
@@ -563,8 +562,7 @@ class MonteCarloTreeSearchNode:
         """
         action = self._untried_actions.pop()
         next_state = self.state.move(action)
-        child_node = MonteCarloTreeSearchNode(
-            next_state, parent=self, parent_action=action)
+        child_node = MonteCarloTreeSearchNode(next_state, parent=self, parent_action=action)
 
         self.children.append(child_node)
         return child_node
@@ -582,8 +580,6 @@ class MonteCarloTreeSearchNode:
         current_rollout_state = self.state
         depth = 0
         while not current_rollout_state.is_game_over() and depth <= MAX_DEPTH:
-            self.state.setRodada(self.state.getRodada() + 1)
-            current_rollout_state.setRodada(self.state.getRodada() + 1)
             possible_moves = current_rollout_state.get_legal_actions()
             if len(possible_moves) == 0:
                 break
@@ -613,8 +609,7 @@ class MonteCarloTreeSearchNode:
         Função que seleciona o melhor filho no array de filhos.
         O primeiro termo da fórmula é exploitation e o segundo é o exploration.
         """
-        choices_weights = [(c.q() / c.n()) + c_param * np.sqrt((2 * np.log(self.n()) / c.n())) for c in
-                           self.children]
+        choices_weights = [(c.q() / c.n()) + c_param * np.sqrt((2 * np.log(self.n()) / c.n())) for c in self.children]
         return self.children[np.argmax(choices_weights)]
 
     def rollout_policy(self, possible_moves):
@@ -752,34 +747,26 @@ def runLocal():
     Função para realizar testes no algoritmo independente do caia
     :return:
     """
-    game = Game(Tabuleiro())
+    gameCaia = Game(Tabuleiro())
+    gameCaia.setRodada(1)
+    for i in range(1000):
 
-    # game.getTabuleiro().inserirNoPorCoordenada(21, 3, COR_AZUL)
-    # game.getTabuleiro().inserirNoPorCoordenada(22, 20, COR_VERMELHO)
-    # game.getTabuleiro().inserirNoPorCoordenada(32, 1, COR_CINZA)
-    #
-    # game.getTabuleiro().inserirNoPorCoordenada(11, 20, COR_AZUL)
-    # game.getTabuleiro().inserirNoPorCoordenada(23, 20, COR_VERMELHO)
-    # game.getTabuleiro().inserirNoPorCoordenada(44, 20, COR_CINZA)
+        tabuleiro = Tabuleiro(gameCaia.getTabuleiro().getDimensao(), False)
+        copiaMatriz = gameCaia.getTabuleiro().getCopiaDaMatriz()
+        tabuleiro.setMatrizNos(copiaMatriz)
+        gameCopia = Game(tabuleiro)
+        gameCopia.setRodada(gameCaia.getRodada())
+        root = MonteCarloTreeSearchNode(gameCopia)
 
-    print('Configuração inicial')
-    game.getTabuleiro().printTabuleiro()
-
-    game.setRodada(1)
-    for i in range(100):
-        print('Rodada ', game.getRodada())
-        print('Rodando monte Carlo Expanções')
-        root = MonteCarloTreeSearchNode(game)
         selected_node = root.best_action()
-        print(selected_node.parent_action)
-        print('Tabuleiro consequencia do monte carlo:')
-        print(selected_node.state.getTabuleiro().printTabuleiro())
-        game.setTabuleiro(selected_node.state.getTabuleiro())
-        print('Score tabuleiro: ', game.getTabuleiro().getScoreTabuleiro())
-        game.calcularScoreJogo()
-        game.setRodada(game.getRodada() + 1)
+        if selected_node.parent_action not in MOVIMENTOS_DESLIZES:
+            gameCaia.getTabuleiro().inserirNoPorCoordenada(selected_node.parent_action, VALOR_INICIAL_POR_RODADA, gameCaia.getAcaoPorRodada())
+        else:
+            gameCaia.getTabuleiro().deslizar(selected_node.parent_action)
+        gameCaia.setRodada(gameCaia.getRodada() + 1)
+        print(gameCaia.getTabuleiro().printTabuleiro())
 
-    print('Score jogo: ', game.getScoreJogo())
+
 
 
 if __name__ == "__main__":
