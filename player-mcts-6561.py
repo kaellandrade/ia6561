@@ -30,12 +30,9 @@ VALOR_INICIAL_POR_RODADA = 1
 RITMO_DO_JOGO = ['azul', 'vermelho', 'cinza', 'deslizar', 'deslizar']
 MOVIMENTOS_DESLIZES = [PARA_DIREITA, PARA_ESQUERDA, PARA_BAIXO, PARA_CIMA]
 
-C = 1/sqrt(2)  # Contante do Exploration
-DELTA_VITORIA = 300  # Definição da vitoria (representa um score mínimo pré-determinado para compreender uma vitória)
-MAX_DEPTH = 10  # Profundidade máxima que as simulações Monte Carlo irão alcançar
-QTD_SIMULACOES = 10  # Quantidade de simulações Monte Carlo que serão feitas
-
-#score alcançado com max_depth igual 25: 124,
+C = sqrt(2)  # Constante do Exploration
+MAX_DEPTH = 8  # Profundidade máxima que as simulações Monte Carlo irão alcançar
+QTD_SIMULACOES = 12  # Quantidade de simulações Monte Carlo que serão feitas
 
 class No:
     """
@@ -95,6 +92,7 @@ class No:
 
 class Tabuleiro:
     """
+    Classe que representa um tabuleiro
     """
     matriz = []
     dimensao = 4
@@ -382,6 +380,9 @@ class Tabuleiro:
 
 
 class Game:
+    """
+    Classe que representa um game, com uma determinada configuração de tabuleiro, scoreMax do jogo e uma rodada.
+    """
     scoreMaxJogo = 0  # pontuação máxima do jogo, que será dada aos jogadores.
     tabuleiro = None
     rodada = None
@@ -449,7 +450,6 @@ class Game:
         """
         acaoAtualNaRodada = self.getAcaoPorRodada()
         acaoAnterior = self.getAcaoPorRodada(self.getRodada()-1)
-        proximaAcao = self.getAcaoPorRodada(self.getRodada()+1)
 
         # criar cópia do tabuleiro para simular um deslize
         dimensao = self.getTabuleiro().dimensao
@@ -499,20 +499,9 @@ class Game:
 
     def game_result(self):
         """
-        Função que retorna 1 se meu estado terminal foi uma vitória ou -1 se foi uma derrota.
-        Aqui foi definido que uma vitória é atingir um scoreTabuleiro no mínimo igual a DELTA_VITORIA.
+        Função que retorna o maior score de jogo obtido por uma simulação do rollout.
         """
-        # print(self.getTabuleiro().printTabuleiro())
-        # print('Score atingido', self.getTabuleiro().getScoreTabuleiro())
-        # if self.getTabuleiro().getScoreTabuleiro() >= DELTA_VITORIA:
-        #     return 1
-        # return -1
-
-        # return self.getTabuleiro().getScoreTabuleiro()
-
         return self.getScoreJogo()
-
-
 
     def move(self, action):
         """
@@ -547,16 +536,15 @@ class MonteCarloTreeSearchNode:
         """
         Inicia os atributos da arvore.
         """
-        self.state = state # Estado do tabuleiro (Tabuleiro)
-        self.parent = parent # No pai
-        self.parent_action = parent_action #A ação que gerou o No atual, exceto a raiz.
-        self.children = [] #Contém os filhos do no atual.
-        self._number_of_visits = 0 #Numero de veses que o nó atual foi visitado.
-        self._results = defaultdict(int) #Dicionario contador
+        self.state = state  # Estado do tabuleiro (Tabuleiro)
+        self.parent = parent  # No pai
+        self.parent_action = parent_action  # A ação que gerou o No atual, exceto a raiz.
+        self.children = []  # Contém os filhos do no atual.
+        self._number_of_visits = 0  # Numero de veses que o nó atual foi visitado.
+        self._results = defaultdict(int)  # Dicionario contador
         self._results[1] = 0  # Vitorias
-        self._results[-1] = 0 # Derrotas TODO: ??
-        self._untried_actions = None #Representa a lista de todas as ações possíveis
-        self._untried_actions = self.untried_actions() #Ações não tentadas
+        self._untried_actions = None  # Representa a lista de todas as ações possíveis
+        self._untried_actions = self.untried_actions()  # Ações não tentadas
 
 
     def untried_actions(self):
@@ -572,8 +560,7 @@ class MonteCarloTreeSearchNode:
         TODO: Derrotas ??
         """
         wins = self._results[1]
-        loses = self._results[-1]
-        return wins - loses
+        return wins
 
     def n(self):
         """
@@ -606,7 +593,7 @@ class MonteCarloTreeSearchNode:
         current_rollout_state = self.state
         depth = 0
         while not current_rollout_state.is_game_over() and depth <= MAX_DEPTH:
-            self.state.setRodada(self.state.getRodada() + 1)
+            current_rollout_state.setRodada(self.state.getRodada() + 1)
             possible_moves = current_rollout_state.get_legal_actions(current_rollout_state.getRodada())
             # if len(possible_moves) == 0:
             #     break
@@ -614,18 +601,16 @@ class MonteCarloTreeSearchNode:
             current_rollout_state = current_rollout_state.move(action)
             depth += 1
             current_rollout_state.calcularScoreJogo()
-            current_rollout_state.setRodada(self.state.getRodada() + 1)
-
         return current_rollout_state.game_result()
 
-    def backpropagate(self, result):
+    def backpropagate(self, reward):
         """
         Função para a etapa de backpropagation Monte Carlo. Atualiza as estatísticas do No.
         """
         self._number_of_visits += 1.  # Incrementa visitas
-        self._results[result] += 1.  # Incrementa a vitória ou a derrota.
+        self._results[1] += reward  # Incrementa a vitória ou a derrota.
         if self.parent:
-            self.parent.backpropagate(result)
+            self.parent.backpropagate(reward)
 
     def is_fully_expanded(self):
         """
@@ -638,7 +623,7 @@ class MonteCarloTreeSearchNode:
         Função que seleciona o melhor filho no array de filhos.
         O primeiro termo da fórmula é exploitation e o segundo é o exploration.
         """
-        choices_weights = [(c.q() / c.n()) + c_param * np.sqrt((2 * np.log(self.n()) / c.n())) for c in
+        choices_weights = [(c.q() / c.n()) + 2 * c_param * np.sqrt((2 * np.log(self.n()) / c.n())) for c in
                            self.children]
         return self.children[np.argmax(choices_weights)]
 
@@ -654,7 +639,6 @@ class MonteCarloTreeSearchNode:
         """
         current_node = self
         while not current_node.is_terminal_node():
-
             if not current_node.is_fully_expanded():
                 return current_node.expand()
             else:
@@ -670,7 +654,6 @@ class MonteCarloTreeSearchNode:
             v = self._tree_policy()
             reward = v.rollout()
             v.backpropagate(reward)
-            # print('Simulação n°', i)
         return self.best_child()
 
 
@@ -784,30 +767,34 @@ def runLocal():
     :return:
     """
     # game = Game(Tabuleiro())
-
-
-    # game.getTabuleiro().inserirNoPorCoordenada(14, 1, COR_CINZA)
-    # game.getTabuleiro().inserirNoPorCoordenada(24, 3, COR_AZUL)
-    # game.getTabuleiro().inserirNoPorCoordenada(23, 3, COR_AZUL)
-    # game.getTabuleiro().inserirNoPorCoordenada(34, 1, COR_CINZA)
     #
+    # game.getTabuleiro().inserirNoPorCoordenada(11, 81, COR_AZUL)
+    # game.getTabuleiro().inserirNoPorCoordenada(21, 27, COR_AZUL)
+    # game.getTabuleiro().inserirNoPorCoordenada(31, 9, COR_AZUL)
+    # game.getTabuleiro().inserirNoPorCoordenada(41, 3, COR_AZUL)
     #
     # print('Configuração inicial')
     # game.getTabuleiro().printTabuleiro()
     #
-    #
-    # game.setRodada(4)
+    # game.setRodada(6)
     # root = MonteCarloTreeSearchNode(game)
     # selected_node = root.best_action()
     # print(selected_node.parent_action)
-    # game.getTabuleiro().deslizar(selected_node.parent_action)
+    # game.getTabuleiro().inserirNoPorCoordenada(selected_node.parent_action, 1, game.getAcaoPorRodada())
     # game.getTabuleiro().printTabuleiro()
-
-    # game.setRodada(5)
+    #
+    # game.setRodada(7)
     # root = MonteCarloTreeSearchNode(game)
     # selected_node = root.best_action()
     # print(selected_node.parent_action)
-    # game.getTabuleiro().deslizar(selected_node.parent_action)
+    # game.getTabuleiro().inserirNoPorCoordenada(selected_node.parent_action, 1, game.getAcaoPorRodada())
+    # game.getTabuleiro().printTabuleiro()
+    #
+    # game.setRodada(8)
+    # root = MonteCarloTreeSearchNode(game)
+    # selected_node = root.best_action()
+    # print(selected_node.parent_action)
+    # game.getTabuleiro().inserirNoPorCoordenada(selected_node.parent_action, 1, game.getAcaoPorRodada())
     # game.getTabuleiro().printTabuleiro()
     #
     # game.setRodada(9)
@@ -824,6 +811,27 @@ def runLocal():
     # game.getTabuleiro().deslizar(selected_node.parent_action)
     # game.getTabuleiro().printTabuleiro()
     #
+    # game.setRodada(11)
+    # root = MonteCarloTreeSearchNode(game)
+    # selected_node = root.best_action()
+    # print(selected_node.parent_action)
+    # game.getTabuleiro().inserirNoPorCoordenada(selected_node.parent_action, 1, game.getAcaoPorRodada())
+    # game.getTabuleiro().printTabuleiro()
+    #
+    # game.setRodada(12)
+    # root = MonteCarloTreeSearchNode(game)
+    # selected_node = root.best_action()
+    # print(selected_node.parent_action)
+    # game.getTabuleiro().inserirNoPorCoordenada(selected_node.parent_action, 1, game.getAcaoPorRodada())
+    # game.getTabuleiro().printTabuleiro()
+    #
+    # game.setRodada(13)
+    # root = MonteCarloTreeSearchNode(game)
+    # selected_node = root.best_action()
+    # print(selected_node.parent_action)
+    # game.getTabuleiro().inserirNoPorCoordenada(selected_node.parent_action, 1, game.getAcaoPorRodada())
+    # game.getTabuleiro().printTabuleiro()
+    #
     # game.setRodada(14)
     # root = MonteCarloTreeSearchNode(game)
     # selected_node = root.best_action()
@@ -837,7 +845,6 @@ def runLocal():
     # print(selected_node.parent_action)
     # game.getTabuleiro().deslizar(selected_node.parent_action)
     # game.getTabuleiro().printTabuleiro()
-
 
     gameCaia = Game(Tabuleiro())
     gameCaia.setRodada(1)
@@ -865,5 +872,5 @@ def runLocal():
     print('Score maximo do jogo: ', gameCaia.getScoreJogo())
 
 if __name__ == "__main__":
-    runCaia()
-    # runLocal()
+    # runCaia()
+    runLocal()
