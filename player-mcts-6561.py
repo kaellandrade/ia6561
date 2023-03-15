@@ -31,10 +31,11 @@ RITMO_DO_JOGO = ['azul', 'vermelho', 'cinza', 'deslizar', 'deslizar']
 MOVIMENTOS_DESLIZES = [PARA_DIREITA, PARA_ESQUERDA, PARA_BAIXO, PARA_CIMA]
 
 C = 1/sqrt(2)  # Contante do Exploration
-DELTA_VITORIA = 100  # Definição da vitoria (representa um score mínimo pré-determinado para compreender uma vitória)
+DELTA_VITORIA = 300  # Definição da vitoria (representa um score mínimo pré-determinado para compreender uma vitória)
 MAX_DEPTH = 10  # Profundidade máxima que as simulações Monte Carlo irão alcançar
-QTD_SIMULACOES = 200  # Quantidade de simulações Monte Carlo que serão feitas
+QTD_SIMULACOES = 10  # Quantidade de simulações Monte Carlo que serão feitas
 
+#score alcançado com max_depth igual 25: 124,
 
 class No:
     """
@@ -348,6 +349,7 @@ class Tabuleiro:
         :lado: PARA_DIREITA, PARA_ESQUERDA, PARA_BAIXO e PARA_CIMA
         """
         self.MOVIMENTOS.get(lado)()
+
         self.calcularScoreTabuleiro()
 
     def calcularScoreTabuleiro(self):
@@ -438,41 +440,56 @@ class Game:
         """
         return self.scoreMaxJogo
 
-    def verificarFimDeJogo(self):
-        """
-        Verifica o fim do jogo. TODO: Otimizar função para verificar pares de iguais.
-        """
-        dimensao = self.getTabuleiro().dimensao
-        proximaRodada = self.getRodada() + 1
-        if len(self.tabuleiro.getCoordenadasVazias()) and self.getAcaoPorRodada(proximaRodada) != 'deslizar': # Tem casas vazias.
-            return False
-        else:
-            tabuleiroCopia = Tabuleiro(dimensao, False)
-            copiaMatriz = self.getTabuleiro().getCopiaDaMatriz()
-            tabuleiroCopia.setMatrizNos(copiaMatriz)
-            mnQuantidade = dimensao*dimensao
-            for deslize in MOVIMENTOS_DESLIZES:
-                tabuleiroCopia.deslizar(deslize)
-                qtdCoordenadasVazias = len(tabuleiroCopia.getCoordenadasVazias())
-                if qtdCoordenadasVazias < mnQuantidade:
-                    return False
-                if qtdCoordenadasVazias == mnQuantidade and self.getAcaoPorRodada(proximaRodada) == 'deslizar':
-                    return True
-
-        return True
-
     def setTabuleiro(self, tabuleiro):
         self.tabuleiro = tabuleiro
 
-    def get_legal_actions(self):
+    def verificarFimDeJogo(self):
+        """
+        Verifica o fim do jogo.
+        """
+        acaoAtualNaRodada = self.getAcaoPorRodada()
+        acaoAnterior = self.getAcaoPorRodada(self.getRodada()-1)
+        proximaAcao = self.getAcaoPorRodada(self.getRodada()+1)
+
+        # criar cópia do tabuleiro para simular um deslize
+        dimensao = self.getTabuleiro().dimensao
+        tabuleiroCopia = Tabuleiro(dimensao, False)
+        copiaMatriz = self.getTabuleiro().getCopiaDaMatriz()
+        tabuleiroCopia.setMatrizNos(copiaMatriz)
+
+        qtdCoordenadasVazias = len(tabuleiroCopia.getCoordenadasVazias())
+
+        # Se não houver casas vazias quando o jogador deve colocar uma peça, o jogo termina.
+        if qtdCoordenadasVazias == 0 and acaoAtualNaRodada != 'deslizar':
+            return True
+
+        # O jogo termina quando o tabuleiro estiver vazio após o primeiro slide
+        if qtdCoordenadasVazias == 16 and acaoAtualNaRodada == 'deslizar' and acaoAnterior == 'deslizar':
+            return True
+
+        # Se não houver movimento de slide válido quando um movimento de slide for necessário, o jogo termina
+        if acaoAtualNaRodada == 'deslizar':
+            for movimento in MOVIMENTOS_DESLIZES:
+                # Se houver pelo menos um deslize válido, já retorne que não é fim de jogo
+                if tabuleiroCopia.isDeslizeValido(movimento):
+                    return False
+            return True
+
+        return False
+
+    def get_legal_actions(self, rodada):
         """
         Função para retornar uma lista de todas as ações possíveis de realizar dado um estado do tabuleiro.
         """
-        acao = self.getAcaoPorRodada()
+        acao = self.getAcaoPorRodada(rodada)
         if acao != 'deslizar':
             return self.getTabuleiro().getCoordenadasVazias()
         else:
-            return copy.copy(MOVIMENTOS_DESLIZES)
+            movimentosPossiveis = []
+            for movimento in MOVIMENTOS_DESLIZES:
+                if self.getTabuleiro().isDeslizeValido(movimento):
+                    movimentosPossiveis.append(movimento)
+            return movimentosPossiveis
 
     def is_game_over(self):
         """
@@ -487,9 +504,15 @@ class Game:
         """
         # print(self.getTabuleiro().printTabuleiro())
         # print('Score atingido', self.getTabuleiro().getScoreTabuleiro())
-        if self.getTabuleiro().getScoreTabuleiro() >= DELTA_VITORIA:
-            return 1
-        return -1
+        # if self.getTabuleiro().getScoreTabuleiro() >= DELTA_VITORIA:
+        #     return 1
+        # return -1
+
+        # return self.getTabuleiro().getScoreTabuleiro()
+
+        return self.getScoreJogo()
+
+
 
     def move(self, action):
         """
@@ -535,11 +558,12 @@ class MonteCarloTreeSearchNode:
         self._untried_actions = None #Representa a lista de todas as ações possíveis
         self._untried_actions = self.untried_actions() #Ações não tentadas
 
+
     def untried_actions(self):
         """
         Retorna a lista de ações não experimentadas de um determinado estado.
         """
-        self._untried_actions = self.state.get_legal_actions()
+        self._untried_actions = self.state.get_legal_actions(self.state.getRodada())
         return self._untried_actions
 
     def q(self):
@@ -583,13 +607,14 @@ class MonteCarloTreeSearchNode:
         depth = 0
         while not current_rollout_state.is_game_over() and depth <= MAX_DEPTH:
             self.state.setRodada(self.state.getRodada() + 1)
-            current_rollout_state.setRodada(self.state.getRodada() + 1)
-            possible_moves = current_rollout_state.get_legal_actions()
-            if len(possible_moves) == 0:
-                break
+            possible_moves = current_rollout_state.get_legal_actions(current_rollout_state.getRodada())
+            # if len(possible_moves) == 0:
+            #     break
             action = self.rollout_policy(possible_moves)
             current_rollout_state = current_rollout_state.move(action)
             depth += 1
+            current_rollout_state.calcularScoreJogo()
+            current_rollout_state.setRodada(self.state.getRodada() + 1)
 
         return current_rollout_state.game_result()
 
@@ -641,7 +666,6 @@ class MonteCarloTreeSearchNode:
         Função para iniciar a execução do algoritmo MCTS TODO: Refatorar para best_action UCTSearch
         """
         simulation_no = QTD_SIMULACOES
-
         for i in range(simulation_no):
             v = self._tree_policy()
             reward = v.rollout()
@@ -656,95 +680,102 @@ def runCaia():
     :return:
     """
     entrada = sys.stdin.readline()
-    game = Game(Tabuleiro())
+    gameCaia = Game(Tabuleiro())
     if entrada.strip() == "A":
         # jogando como jogador A
-        rodada = 1
+        gameCaia.setRodada(1)
         while True:
             # Realizando minha jogada
             if entrada.strip() == "Quit":
                 break
-            if game.getAcaoPorRodada(rodada) != 'deslizar':
-                coordenada = game.getCordenadaAleatoria()
-                while not game.getTabuleiro().hasPosicaoVazio(coordenada):
-                    coordenada = game.getCordenadaAleatoria()
-                game.getTabuleiro().inserirNoPorCoordenada(coordenada, VALOR_INICIAL_POR_RODADA, game.getAcaoPorRodada(rodada))
-                print(coordenada)
+
+            tabuleiro = Tabuleiro(gameCaia.getTabuleiro().getDimensao(), False)
+            copiaMatriz = gameCaia.getTabuleiro().getCopiaDaMatriz()
+            tabuleiro.setMatrizNos(copiaMatriz)
+            gameCopia = Game(tabuleiro)
+            gameCopia.setRodada(gameCaia.getRodada())
+            root = MonteCarloTreeSearchNode(gameCopia)
+            selected_node = root.best_action()
+
+            if selected_node.parent_action not in MOVIMENTOS_DESLIZES:
+                gameCaia.getTabuleiro().inserirNoPorCoordenada(selected_node.parent_action, VALOR_INICIAL_POR_RODADA,
+                                                               gameCaia.getAcaoPorRodada())
+                print(selected_node.parent_action)
                 sys.stdout.flush()
             else:
-                # Comando de deslize.
-                deslizesPossiveis = list(game.getTabuleiro().MOVIMENTOS.keys())
-                comandoDeDeslize = random.choice(deslizesPossiveis)
-
-                while not game.getTabuleiro().isDeslizeValido(comandoDeDeslize):
-                    comandoDeDeslize = random.choice(list(game.getTabuleiro().MOVIMENTOS.keys()))
-
-                game.getTabuleiro().deslizar(comandoDeDeslize)
-                print(comandoDeDeslize)
+                gameCaia.getTabuleiro().deslizar(selected_node.parent_action)
+                print(selected_node.parent_action)
                 sys.stdout.flush()
-            rodada += 2
+
+            gameCaia.setRodada(gameCaia.getRodada() + 2)
 
             # Prever a jogada adversária
             entrada = sys.stdin.readline()
             if entrada.strip() == PARA_ESQUERDA:
-                game.getTabuleiro().deslizar(PARA_ESQUERDA)
+                gameCaia.getTabuleiro().deslizar(PARA_ESQUERDA)
 
             if entrada.strip() == PARA_DIREITA:
-                game.getTabuleiro().deslizar(PARA_DIREITA)
+                gameCaia.getTabuleiro().deslizar(PARA_DIREITA)
 
             if entrada.strip() == PARA_CIMA:
-                game.getTabuleiro().deslizar(PARA_CIMA)
+                gameCaia.getTabuleiro().deslizar(PARA_CIMA)
 
             if entrada.strip() == PARA_BAIXO:
-                game.getTabuleiro().deslizar(PARA_BAIXO)
+                gameCaia.getTabuleiro().deslizar(PARA_BAIXO)
 
-            if entrada.strip() != "Quit" and game.getAcaoPorRodada(rodada - 1) != 'deslizar':
+            rodada = gameCaia.getRodada()
+            if entrada.strip() != "Quit" and gameCaia.getAcaoPorRodada(rodada - 1) != 'deslizar':
                 coordenadaDoOponente = int(entrada.strip())
-                game.getTabuleiro().inserirNoPorCoordenada(coordenadaDoOponente, VALOR_INICIAL_POR_RODADA,
-                                                           game.getAcaoPorRodada(rodada - 1))
+                gameCaia.getTabuleiro().inserirNoPorCoordenada(coordenadaDoOponente, VALOR_INICIAL_POR_RODADA,
+                                                           gameCaia.getAcaoPorRodada(rodada - 1))
 
     else:
         # jogando como jogador B
-        rodada = 2
+        gameCaia.setRodada(2)
         while True:
             # Ler a jogada adversária
             entrada = sys.stdin.readline()
             if entrada.strip() == PARA_ESQUERDA:
-                game.getTabuleiro().deslizar(PARA_ESQUERDA)
+                gameCaia.getTabuleiro().deslizar(PARA_ESQUERDA)
 
             if entrada.strip() == PARA_DIREITA:
-                game.getTabuleiro().deslizar(PARA_DIREITA)
+                gameCaia.getTabuleiro().deslizar(PARA_DIREITA)
 
             if entrada.strip() == PARA_CIMA:
-                game.getTabuleiro().deslizar(PARA_CIMA)
+                gameCaia.getTabuleiro().deslizar(PARA_CIMA)
 
             if entrada.strip() == PARA_BAIXO:
-                game.getTabuleiro().deslizar(PARA_BAIXO)
+                gameCaia.getTabuleiro().deslizar(PARA_BAIXO)
 
-            if entrada.strip() != "Quit" and game.getAcaoPorRodada(rodada - 1) != 'deslizar':
+            rodada = gameCaia.getRodada()
+            if entrada.strip() != "Quit" and gameCaia.getAcaoPorRodada(rodada - 1) != 'deslizar':
                 coordenadaDoOponente = int(entrada.strip())
-                game.getTabuleiro().inserirNoPorCoordenada(coordenadaDoOponente, VALOR_INICIAL_POR_RODADA,
-                                                           game.getAcaoPorRodada(rodada - 1))
+                gameCaia.getTabuleiro().inserirNoPorCoordenada(coordenadaDoOponente, VALOR_INICIAL_POR_RODADA,
+                                                               gameCaia.getAcaoPorRodada(rodada - 1))
 
             # Realizando minha jogada
             if entrada.strip() == "Quit":
                 break
-            if game.getAcaoPorRodada(rodada) != 'deslizar':
-                coordenada = game.getCordenadaAleatoria()
-                while not game.getTabuleiro().hasPosicaoVazio(coordenada):
-                    coordenada = game.getCordenadaAleatoria()
-                game.getTabuleiro().inserirNoPorCoordenada(coordenada, VALOR_INICIAL_POR_RODADA, game.getAcaoPorRodada(rodada))
-                print(coordenada)
+
+            tabuleiro = Tabuleiro(gameCaia.getTabuleiro().getDimensao(), False)
+            copiaMatriz = gameCaia.getTabuleiro().getCopiaDaMatriz()
+            tabuleiro.setMatrizNos(copiaMatriz)
+            gameCopia = Game(tabuleiro)
+            gameCopia.setRodada(gameCaia.getRodada())
+            root = MonteCarloTreeSearchNode(gameCopia)
+            selected_node = root.best_action()
+
+            if selected_node.parent_action not in MOVIMENTOS_DESLIZES:
+                gameCaia.getTabuleiro().inserirNoPorCoordenada(selected_node.parent_action, VALOR_INICIAL_POR_RODADA,
+                                                               gameCaia.getAcaoPorRodada())
+                print(selected_node.parent_action)
                 sys.stdout.flush()
             else:
-                comandoDeDeslize = random.choice(list(game.getTabuleiro().MOVIMENTOS.keys()))
-                while not game.getTabuleiro().isDeslizeValido(comandoDeDeslize):
-                    comandoDeDeslize = random.choice(list(game.getTabuleiro().MOVIMENTOS.keys()))
-
-                game.getTabuleiro().deslizar(comandoDeDeslize)
-                print(comandoDeDeslize)
+                gameCaia.getTabuleiro().deslizar(selected_node.parent_action)
+                print(selected_node.parent_action)
                 sys.stdout.flush()
-            rodada += 2
+
+            gameCaia.setRodada(gameCaia.getRodada() + 2)
 
 
 def runLocal():
@@ -752,36 +783,87 @@ def runLocal():
     Função para realizar testes no algoritmo independente do caia
     :return:
     """
-    game = Game(Tabuleiro())
+    # game = Game(Tabuleiro())
 
-    # game.getTabuleiro().inserirNoPorCoordenada(21, 3, COR_AZUL)
-    # game.getTabuleiro().inserirNoPorCoordenada(22, 20, COR_VERMELHO)
-    # game.getTabuleiro().inserirNoPorCoordenada(32, 1, COR_CINZA)
+
+    # game.getTabuleiro().inserirNoPorCoordenada(14, 1, COR_CINZA)
+    # game.getTabuleiro().inserirNoPorCoordenada(24, 3, COR_AZUL)
+    # game.getTabuleiro().inserirNoPorCoordenada(23, 3, COR_AZUL)
+    # game.getTabuleiro().inserirNoPorCoordenada(34, 1, COR_CINZA)
     #
-    # game.getTabuleiro().inserirNoPorCoordenada(11, 20, COR_AZUL)
-    # game.getTabuleiro().inserirNoPorCoordenada(23, 20, COR_VERMELHO)
-    # game.getTabuleiro().inserirNoPorCoordenada(44, 20, COR_CINZA)
+    #
+    # print('Configuração inicial')
+    # game.getTabuleiro().printTabuleiro()
+    #
+    #
+    # game.setRodada(4)
+    # root = MonteCarloTreeSearchNode(game)
+    # selected_node = root.best_action()
+    # print(selected_node.parent_action)
+    # game.getTabuleiro().deslizar(selected_node.parent_action)
+    # game.getTabuleiro().printTabuleiro()
 
-    print('Configuração inicial')
-    game.getTabuleiro().printTabuleiro()
+    # game.setRodada(5)
+    # root = MonteCarloTreeSearchNode(game)
+    # selected_node = root.best_action()
+    # print(selected_node.parent_action)
+    # game.getTabuleiro().deslizar(selected_node.parent_action)
+    # game.getTabuleiro().printTabuleiro()
+    #
+    # game.setRodada(9)
+    # root = MonteCarloTreeSearchNode(game)
+    # selected_node = root.best_action()
+    # print(selected_node.parent_action)
+    # game.getTabuleiro().deslizar(selected_node.parent_action)
+    # game.getTabuleiro().printTabuleiro()
+    #
+    # game.setRodada(10)
+    # root = MonteCarloTreeSearchNode(game)
+    # selected_node = root.best_action()
+    # print(selected_node.parent_action)
+    # game.getTabuleiro().deslizar(selected_node.parent_action)
+    # game.getTabuleiro().printTabuleiro()
+    #
+    # game.setRodada(14)
+    # root = MonteCarloTreeSearchNode(game)
+    # selected_node = root.best_action()
+    # print(selected_node.parent_action)
+    # game.getTabuleiro().deslizar(selected_node.parent_action)
+    # game.getTabuleiro().printTabuleiro()
+    #
+    # game.setRodada(15)
+    # root = MonteCarloTreeSearchNode(game)
+    # selected_node = root.best_action()
+    # print(selected_node.parent_action)
+    # game.getTabuleiro().deslizar(selected_node.parent_action)
+    # game.getTabuleiro().printTabuleiro()
 
-    game.setRodada(1)
-    for i in range(100):
-        print('Rodada ', game.getRodada())
-        print('Rodando monte Carlo Expanções')
-        root = MonteCarloTreeSearchNode(game)
+
+    gameCaia = Game(Tabuleiro())
+    gameCaia.setRodada(1)
+    for i in range(1000):
+        print('Rodada: ', gameCaia.getRodada())
+        tabuleiro = Tabuleiro(gameCaia.getTabuleiro().getDimensao(), False)
+        copiaMatriz = gameCaia.getTabuleiro().getCopiaDaMatriz()
+        tabuleiro.setMatrizNos(copiaMatriz)
+        gameCopia = Game(tabuleiro)
+        gameCopia.setRodada(gameCaia.getRodada())
+        root = MonteCarloTreeSearchNode(gameCopia)
+
         selected_node = root.best_action()
-        print(selected_node.parent_action)
-        print('Tabuleiro consequencia do monte carlo:')
-        print(selected_node.state.getTabuleiro().printTabuleiro())
-        game.setTabuleiro(selected_node.state.getTabuleiro())
-        print('Score tabuleiro: ', game.getTabuleiro().getScoreTabuleiro())
-        game.calcularScoreJogo()
-        game.setRodada(game.getRodada() + 1)
+        if selected_node.parent_action not in MOVIMENTOS_DESLIZES:
+            gameCaia.getTabuleiro().inserirNoPorCoordenada(selected_node.parent_action, VALOR_INICIAL_POR_RODADA,
+                                                           gameCaia.getAcaoPorRodada())
+        else:
+            print(selected_node.parent_action)
+            gameCaia.getTabuleiro().deslizar(selected_node.parent_action)
 
-    print('Score jogo: ', game.getScoreJogo())
-
+        gameCaia.getTabuleiro().printTabuleiro()
+        print('Score tabuleiro: ', gameCaia.getTabuleiro().getScoreTabuleiro())
+        gameCaia.calcularScoreJogo()
+        gameCaia.setRodada(gameCaia.getRodada() + 1)
+    print('Score maximo do jogo: ', gameCaia.getScoreJogo())
 
 if __name__ == "__main__":
-    # runCaia()
-    runLocal()
+    runCaia()
+    # runLocal()
