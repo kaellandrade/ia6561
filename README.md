@@ -49,8 +49,8 @@ Observe os testes em execução.
    
 ## Run local
 1. Intalar as dependencias
-   2. `pip install numpy`;
-   3. `pip install colorama`.
+   1. `pip install numpy`;
+   2. `pip install colorama`.
    
 2. Executar o projeto
    1. `python3 player-mcts-6561.py`.
