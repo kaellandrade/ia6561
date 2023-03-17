@@ -11,12 +11,12 @@ Escolhemos o jogo [6561](https://archive.codecup.nl/2016/).
 O jogo possui a seguinte dinâmica:
 O score é apenas a soma de todas as peças no tabuleiro.
 
-1. O primeiro jogador _(chamaremos de jogador A)_ escolhe uma coordenada para inserir uma peça de **cor vermelha** no tabuleiro _(em uma coordenada vazia)_
+1. O primeiro jogador _(chamaremos de jogador A)_ escolhe uma coordenada para inserir uma peça de **cor vermelha** no tabuleiro _(em uma coordenada vazia)_;
 2. O segundo jogador _(jogador B)_ escolhe outra coordenada vazia para inserir uma segunda peça de **cor azul** no tabuleiro;
 3. Jogador 'A' insere uma terceira peça no tabuleiro, agora de **cor cinza**;
-4. Jogador 'B' escolhe um movimento de giro: pode ser **cima, baixo, esquerda e direita**
-5. Jogador 'A' escolhe também um dos movimentos de giros citados à cima.
-6. Esse processo se repete até que as não haja casa para inserir peças ou o tabuleiro esteja completamente vazio durante as rodadas. _(na competição só é permitido ir até 1000 rodadas para somar pontos)_
+4. Jogador 'B' escolhe um movimento de giro: pode ser **cima, baixo, esquerda e direita**;
+5. Jogador 'A' escolhe também um dos movimentos de giros citados à cima;
+6. Esse processo se repete até que as não haja casa para inserir peças ou o tabuleiro esteja completamente vazio durante as rodadas. _(na competição só é permitido ir até 1000 rodadas para somar pontos)_.
 
 ## Regras do jogo:
 1. Ao girar o tabuleiro para um dos lados escolhidos _(cima, baixo, esquerda e direita)_ as peças podem ser combinadas ou apagadas;
@@ -48,17 +48,17 @@ Observe os testes em execução.
    
 ## Run local
 1. Intalar as dependencias
-   2. `pip install numpy`
-   3. `pip install colorama`
+   2. `pip install numpy`;
+   3. `pip install colorama`.
    
 2. Executar o projeto
-   1. `python3 player-mcts-6561.py`
+   1. `python3 player-mcts-6561.py`.
 
 ## Run servidor caia _(necessário apenas na competição)_
-- rodar comando `dos2unix player-mcts-6561.py` na própria pasta do git
-- copiar esse mesmo arquivo para pasta bin do caia
-- renomear através do comando `mv player-mcts-6561.py player1`
-- Dar permissão de execução: `chmod +x player1`
+- Rodar comando `dos2unix player-mcts-6561.py` na própria pasta do git;
+- Copiar esse mesmo arquivo para pasta bin do caia;
+- Renomear através do comando `mv player-mcts-6561.py player1`;
+- Dar permissão de execução: `chmod +x player1`.
 
 <hr>
 
