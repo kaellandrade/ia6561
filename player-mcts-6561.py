@@ -34,6 +34,7 @@ C = sqrt(2)  # Constante do Exploration
 MAX_DEPTH = 8  # Profundidade máxima que as simulações Monte Carlo irão alcançar
 QTD_SIMULACOES = 12  # Quantidade de simulações Monte Carlo que serão feitas
 
+
 class No:
     """
     Classe que representa um No em um tabuleiro. (Vazio ou não)
@@ -156,7 +157,7 @@ class Tabuleiro:
         novoNo = No()
         novoNo.cor = cor
         novoNo.valor = valor
-        linhaParaInserir, colunaParaInserir = self._splitCoordenada(coordenada) # Destructuring
+        linhaParaInserir, colunaParaInserir = self._splitCoordenada(coordenada)  # Destructuring
         self.matriz[linhaParaInserir][colunaParaInserir] = novoNo
         self.calcularScoreTabuleiro()
 
@@ -184,7 +185,7 @@ class Tabuleiro:
         for i in range(self.dimensao):
             for j in range(self.dimensao):
                 if self.matriz[i][j].isNoVazio():
-                    coordenada = int(str(i+1) + str(j+1)) # Todo usar _splitCoordenada depois
+                    coordenada = int(str(i + 1) + str(j + 1))  # Todo usar _splitCoordenada depois
                     coordenadasVazias.append(coordenada)
         return coordenadasVazias
 
@@ -194,7 +195,7 @@ class Tabuleiro:
         :param coordenada:
         :return: Booleano
         """
-        linhaParaInserir, colunaParaInserir = self._splitCoordenada(coordenada) #Destructuring
+        linhaParaInserir, colunaParaInserir = self._splitCoordenada(coordenada)  # Destructuring
         if not bool(self.matriz[linhaParaInserir][colunaParaInserir].valor):
             return True
         else:
@@ -246,7 +247,7 @@ class Tabuleiro:
                         lista[i] = No()
                     # Limpando as casas (Mesmo valor, porém com cores distintas)
                     if noA.getValor() == noB.getValor() and noA.getCor() != noB.getCor():
-                        lista[i-1] = No()
+                        lista[i - 1] = No()
                         lista[i] = No()
                 i += 1
         if movimento == PARA_DIREITA:
@@ -310,14 +311,15 @@ class Tabuleiro:
         self._transporMatriz(self.matriz)
         for i in range(4):
             self._aplicarRegraLinha(self.matriz[i], PARA_ESQUERDA)
-        self._transporMatriz(self.matriz)                              # Retornar para a matriz original
+        self._transporMatriz(self.matriz)  # Retornar para a matriz original
 
     def isDeslizeValido(self, movimentoDeDeslize):
         """
         Verifica se um movimento de deslize é válido.
         Caso o deslize não mude a configuração do tabuleiro, esse deslize é inválido.
         """
-        novoTabuleiro = Tabuleiro(4, False)  # Não quero iniciar os nós, pois irei pegar do tabuleiro original. (matriz= [])
+        novoTabuleiro = Tabuleiro(4,
+                                  False)  # Não quero iniciar os nós, pois irei pegar do tabuleiro original. (matriz= [])
         copiaDaMatrizOriginal = self.getCopiaDaMatriz()
         novoTabuleiro.setMatrizNos(copiaDaMatrizOriginal)
         novoTabuleiro.deslizar(movimentoDeDeslize)
@@ -449,7 +451,7 @@ class Game:
         Verifica o fim do jogo.
         """
         acaoAtualNaRodada = self.getAcaoPorRodada()
-        acaoAnterior = self.getAcaoPorRodada(self.getRodada()-1)
+        acaoAnterior = self.getAcaoPorRodada(self.getRodada() - 1)
 
         # criar cópia do tabuleiro para simular um deslize
         dimensao = self.getTabuleiro().dimensao
@@ -532,6 +534,7 @@ class MonteCarloTreeSearchNode:
     """
     Representa a arvore Monte Carlo
     """
+
     def __init__(self, state, parent=None, parent_action=None):
         """
         Inicia os atributos da arvore.
@@ -545,7 +548,6 @@ class MonteCarloTreeSearchNode:
         self._results[1] = 0  # Vitorias
         self._untried_actions = None  # Representa a lista de todas as ações possíveis
         self._untried_actions = self.untried_actions()  # Ações não tentadas
-
 
     def untried_actions(self):
         """
@@ -710,7 +712,7 @@ def runCaia():
             if entrada.strip() != "Quit" and gameCaia.getAcaoPorRodada(rodada - 1) != 'deslizar':
                 coordenadaDoOponente = int(entrada.strip())
                 gameCaia.getTabuleiro().inserirNoPorCoordenada(coordenadaDoOponente, VALOR_INICIAL_POR_RODADA,
-                                                           gameCaia.getAcaoPorRodada(rodada - 1))
+                                                               gameCaia.getAcaoPorRodada(rodada - 1))
 
     else:
         # jogando como jogador B
@@ -766,89 +768,9 @@ def runLocal():
     Função para realizar testes no algoritmo independente do caia
     :return:
     """
-    # game = Game(Tabuleiro())
-    #
-    # game.getTabuleiro().inserirNoPorCoordenada(11, 81, COR_AZUL)
-    # game.getTabuleiro().inserirNoPorCoordenada(21, 27, COR_AZUL)
-    # game.getTabuleiro().inserirNoPorCoordenada(31, 9, COR_AZUL)
-    # game.getTabuleiro().inserirNoPorCoordenada(41, 3, COR_AZUL)
-    #
-    # print('Configuração inicial')
-    # game.getTabuleiro().printTabuleiro()
-    #
-    # game.setRodada(6)
-    # root = MonteCarloTreeSearchNode(game)
-    # selected_node = root.best_action()
-    # print(selected_node.parent_action)
-    # game.getTabuleiro().inserirNoPorCoordenada(selected_node.parent_action, 1, game.getAcaoPorRodada())
-    # game.getTabuleiro().printTabuleiro()
-    #
-    # game.setRodada(7)
-    # root = MonteCarloTreeSearchNode(game)
-    # selected_node = root.best_action()
-    # print(selected_node.parent_action)
-    # game.getTabuleiro().inserirNoPorCoordenada(selected_node.parent_action, 1, game.getAcaoPorRodada())
-    # game.getTabuleiro().printTabuleiro()
-    #
-    # game.setRodada(8)
-    # root = MonteCarloTreeSearchNode(game)
-    # selected_node = root.best_action()
-    # print(selected_node.parent_action)
-    # game.getTabuleiro().inserirNoPorCoordenada(selected_node.parent_action, 1, game.getAcaoPorRodada())
-    # game.getTabuleiro().printTabuleiro()
-    #
-    # game.setRodada(9)
-    # root = MonteCarloTreeSearchNode(game)
-    # selected_node = root.best_action()
-    # print(selected_node.parent_action)
-    # game.getTabuleiro().deslizar(selected_node.parent_action)
-    # game.getTabuleiro().printTabuleiro()
-    #
-    # game.setRodada(10)
-    # root = MonteCarloTreeSearchNode(game)
-    # selected_node = root.best_action()
-    # print(selected_node.parent_action)
-    # game.getTabuleiro().deslizar(selected_node.parent_action)
-    # game.getTabuleiro().printTabuleiro()
-    #
-    # game.setRodada(11)
-    # root = MonteCarloTreeSearchNode(game)
-    # selected_node = root.best_action()
-    # print(selected_node.parent_action)
-    # game.getTabuleiro().inserirNoPorCoordenada(selected_node.parent_action, 1, game.getAcaoPorRodada())
-    # game.getTabuleiro().printTabuleiro()
-    #
-    # game.setRodada(12)
-    # root = MonteCarloTreeSearchNode(game)
-    # selected_node = root.best_action()
-    # print(selected_node.parent_action)
-    # game.getTabuleiro().inserirNoPorCoordenada(selected_node.parent_action, 1, game.getAcaoPorRodada())
-    # game.getTabuleiro().printTabuleiro()
-    #
-    # game.setRodada(13)
-    # root = MonteCarloTreeSearchNode(game)
-    # selected_node = root.best_action()
-    # print(selected_node.parent_action)
-    # game.getTabuleiro().inserirNoPorCoordenada(selected_node.parent_action, 1, game.getAcaoPorRodada())
-    # game.getTabuleiro().printTabuleiro()
-    #
-    # game.setRodada(14)
-    # root = MonteCarloTreeSearchNode(game)
-    # selected_node = root.best_action()
-    # print(selected_node.parent_action)
-    # game.getTabuleiro().deslizar(selected_node.parent_action)
-    # game.getTabuleiro().printTabuleiro()
-    #
-    # game.setRodada(15)
-    # root = MonteCarloTreeSearchNode(game)
-    # selected_node = root.best_action()
-    # print(selected_node.parent_action)
-    # game.getTabuleiro().deslizar(selected_node.parent_action)
-    # game.getTabuleiro().printTabuleiro()
-
     gameCaia = Game(Tabuleiro())
     gameCaia.setRodada(1)
-    for i in range(1000):
+    for i in range(500):
         print('Rodada: ', gameCaia.getRodada())
         tabuleiro = Tabuleiro(gameCaia.getTabuleiro().getDimensao(), False)
         copiaMatriz = gameCaia.getTabuleiro().getCopiaDaMatriz()
@@ -870,6 +792,7 @@ def runLocal():
         gameCaia.calcularScoreJogo()
         gameCaia.setRodada(gameCaia.getRodada() + 1)
     print('Score maximo do jogo: ', gameCaia.getScoreJogo())
+
 
 if __name__ == "__main__":
     # runCaia()
