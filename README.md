@@ -7,8 +7,15 @@ Projeto realizado na disciplina de Inteligência artificial ministrada por [Hend
 O projeto consistem na escolha de um dos jogos listados no site da [CodeCup](https://www.codecup.nl/archives.php), uma plataforma que organiza
 competições de jogos.
 
-Escolhemos o jogo [6561](https://archive.codecup.nl/2016/). 
-O jogo possui a seguinte dinâmica:
+## O objetivo do projeto:
+
+1. Escolher um dos jogos listados no link apresentado acima (escolhemos o [6561](https://archive.codecup.nl/2016/);
+2. Modelar o jogo;
+3. Configurar o servidor da competição _(disponibilizado pela Codecup para cada jogo)_;
+4. Criar um agente inteligente (IA) que consiga jogar e maximizar pontos.
+
+Como falei anterior mente escolhemos o jogo [6561](https://archive.codecup.nl/2016/). O jogo possui a seguinte dinâmica:
+
 O score é apenas a soma de todas as peças no tabuleiro.
 
 1. O primeiro jogador _(chamaremos de jogador A)_ escolhe uma coordenada para inserir uma peça de **cor vermelha** no tabuleiro _(em uma coordenada vazia)_;
@@ -29,12 +36,6 @@ Veja um demo da dinâmica do jogo. _(Player 1 jogando cooperativamente com Playe
 
 <img src="assets/demo.gif">
 
-## O objetivo do projeto:
-
-1. Escolher um dos jogos listados no link apresentado acima (escolhemos o [6561](https://archive.codecup.nl/2016/);
-2. Modelar o jogo;
-3. Configurar o servidor da competição _(disponibilizado pela Codecup para cada jogo)_;
-4. Criar um agente inteligente (IA) que consiga jogar e maximizar pontos.
 
 ## Técnica de IA utilizada para o projeto.
 Escolhemos o método de [Monte Carlo](https://pt.wikipedia.org/wiki/M%C3%A9todo_de_Monte_Carlo) com o critério [UCT](https://www.chessprogramming.org/UCT) para modelar nosso
