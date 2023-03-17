@@ -7,13 +7,16 @@ Projeto realizado na disciplina de Inteligência artificial ministrada por [Hend
 O projeto consistem na escolha de um dos jogos listados no site da [CodeCup](https://www.codecup.nl/archives.php), uma plataforma que organiza
 competições de jogos.
 
-Escolhemos o jogo [6561](https://archive.codecup.nl/2016/). O jogo possue a seguinte dinâmica:
+Escolhemos o jogo [6561](https://archive.codecup.nl/2016/). 
+O jogo possui a seguinte dinâmica:
+O score é apenas a soma de todas as peças no tabuleiro.
 
-1. O primeiro jogador (chamaremos de jogador A) escolhe uma coordenada para inserir uma peça de **cor vermelha** no tabuleiro (em uma coordenada vazia)
-2. O segundo jogador (jogador B) escolhe outra coordenada vazia para inserir uma segunda peça de **cor azul** no tabuleiro;
+1. O primeiro jogador _(chamaremos de jogador A)_ escolhe uma coordenada para inserir uma peça de **cor vermelha** no tabuleiro _(em uma coordenada vazia)_
+2. O segundo jogador _(jogador B)_ escolhe outra coordenada vazia para inserir uma segunda peça de **cor azul** no tabuleiro;
 3. Jogador 'A' insere uma terceira peça no tabuleiro, agora de **cor cinza**;
 4. Jogador 'B' escolhe um movimento de giro: pode ser **cima, baixo, esquerda e direita**
 5. Jogador 'A' escolhe também um dos movimentos de giros citados à cima.
+6. Esse processo se repete até que as não haja casa para inserir peças ou o tabuleiro esteja completamente vazio durante as rodadas. _(na competição só é permitido ir até 1000 rodadas para somar pontos)_
 
 ## Regras do jogo:
 1. Ao girar o tabuleiro para um dos lados escolhidos _(cima, baixo, esquerda e direita)_ as peças podem ser combinadas ou apagadas;
